@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>カラーマスター 2級【お試し版】| YUKA's Color Studio</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    body{font-family:'Noto Sans JP',sans-serif;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+    @keyframes dropDown{from{top:-120px}to{top:45%}}
+    .fu{animation:fadeUp .4s ease forwards}
+    .pop{animation:pop .35s ease forwards}
+    button{font-family:'Noto Sans JP',sans-serif;cursor:pointer;border:none;}
+    input{font-family:'Noto Sans JP',sans-serif;}
+    ::-webkit-scrollbar{width:0}
+  </style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+const colors=[
+  {name:"鴇色",reading:"ときいろ",hex:"#F0A0A0",systematic:"明るい紫みの赤",munsell:"7RP 7.5/8",h:"7RP",v:7.5,c:8,origin:"和名",category:"赤・ピンク系",warm:"暖"},
+  {name:"韓紅花",reading:"からくれない",hex:"#C0002A",systematic:"あざやかな赤",munsell:"1.5R 5.5/13",h:"1.5R",v:5.5,c:13,origin:"和名",category:"赤・ピンク系",warm:"暖"},
+  {name:"蘇芳",reading:"すおう",hex:"#7A2040",systematic:"くすんだ赤",munsell:"4R 4/7",h:"4R",v:4,c:7,origin:"和名",category:"赤・ピンク系",warm:"暖"},
+  {name:"鳶色",reading:"とびいろ",hex:"#7A3020",systematic:"暗い黄みの赤",munsell:"7.5R 3.5/5",h:"7.5R",v:3.5,c:5,origin:"和名",category:"赤・ピンク系",warm:"暖"},
+  {name:"海老茶",reading:"えびちゃ",hex:"#6B1A20",systematic:"暗い黄みの赤",munsell:"8R 3/4.5",h:"8R",v:3,c:4.5,origin:"和名",category:"赤・ピンク系",warm:"暖"},
+  {name:"弁柄色",reading:"べんがらいろ",hex:"#8A3020",systematic:"暗い黄みの赤",munsell:"8R 3.5/7",h:"8R",v:3.5,c:7,origin:"和名",category:"赤・ピンク系",warm:"暖"},
+  {name:"黄丹",reading:"おうに",hex:"#E86020",systematic:"つよい黄赤",munsell:"10R 6/12",h:"10R",v:6,c:12,origin:"和名",category:"黄・橙系",warm:"暖"},
+  {name:"柑子色",reading:"こうじいろ",hex:"#F08030",systematic:"明るい黄赤",munsell:"5.5YR 7.5/9",h:"5.5YR",v:7.5,c:9,origin:"和名",category:"黄・橙系",warm:"暖"},
+  {name:"琥珀色",reading:"こはくいろ",hex:"#A06820",systematic:"くすんだ赤みの黄",munsell:"8YR 5.5/6.5",h:"8YR",v:5.5,c:6.5,origin:"和名",category:"黄・橙系",warm:"暖"},
+  {name:"朽葉色",reading:"くちばいろ",hex:"#A87848",systematic:"灰みの赤みを帯びた黄",munsell:"10YR 5/2",h:"10YR",v:5,c:2,origin:"和名",category:"黄・橙系",warm:"暖"},
+  {name:"鬱金色",reading:"うこんいろ",hex:"#E8B820",systematic:"つよい黄",munsell:"2Y 7.5/12",h:"2Y",v:7.5,c:12,origin:"和名",category:"黄・橙系",warm:"暖"},
+  {name:"刈安色",reading:"かりやすいろ",hex:"#D8C860",systematic:"うすい緑みの黄",munsell:"7Y 8.5/7",h:"7Y",v:8.5,c:7,origin:"和名",category:"黄・橙系",warm:"暖"},
+  {name:"黄檗色",reading:"きはだいろ",hex:"#C8A820",systematic:"明るい黄緑",munsell:"9Y 8/8",h:"9Y",v:8,c:8,origin:"和名",category:"黄・橙系",warm:"暖"},
+  {name:"代赭",reading:"たいしゃ",hex:"#A05030",systematic:"くすんだ黄赤",munsell:"2.5YR 5/8.5",h:"2.5YR",v:5,c:8.5,origin:"和名",category:"茶系",warm:"暖"},
+  {name:"桧皮色",reading:"ひわだいろ",hex:"#6B3818",systematic:"暗い灰みの黄赤",munsell:"1YR 4.3/4",h:"1YR",v:4.3,c:4,origin:"和名",category:"茶系",warm:"暖"},
+  {name:"鶸色",reading:"ひわいろ",hex:"#B8C820",systematic:"つよい黄緑",munsell:"1GY 7.5/8",h:"1GY",v:7.5,c:8,origin:"和名",category:"緑系",warm:"中"},
+  {name:"海松色",reading:"みるいろ",hex:"#608040",systematic:"暗い灰みの黄緑",munsell:"9.5Y 4.5/2.5",h:"9.5Y",v:4.5,c:2.5,origin:"和名",category:"緑系",warm:"中"},
+  {name:"常磐色",reading:"ときわいろ",hex:"#306840",systematic:"こい緑",munsell:"3G 4.5/7",h:"3G",v:4.5,c:7,origin:"和名",category:"緑系",warm:"寒"},
+  {name:"緑青色",reading:"ろくしょういろ",hex:"#407060",systematic:"くすんだ緑",munsell:"4G 5/4",h:"4G",v:5,c:4,origin:"和名",category:"緑系",warm:"寒"},
+  {name:"鉄色",reading:"てついろ",hex:"#204840",systematic:"ごく暗い青緑",munsell:"2.5BG 2.5/2.5",h:"2.5BG",v:2.5,c:2.5,origin:"和名",category:"緑系",warm:"寒"},
+  {name:"新橋色",reading:"しんばしいろ",hex:"#40B0A8",systematic:"明るい緑みの青",munsell:"2.5B 6.5/5.5",h:"2.5B",v:6.5,c:5.5,origin:"和名",category:"青系",warm:"寒"},
+  {name:"納戸色",reading:"なんどいろ",hex:"#306880",systematic:"つよい緑みの青",munsell:"4B 4/6",h:"4B",v:4,c:6,origin:"和名",category:"青系",warm:"寒"},
+  {name:"甕覗き",reading:"かめのぞき",hex:"#A8D8C8",systematic:"やわらかい緑みの青",munsell:"4.5B 7/4",h:"4.5B",v:7,c:4,origin:"和名",category:"青系",warm:"寒"},
+  {name:"縹色",reading:"はなだいろ",hex:"#3080A0",systematic:"つよい青",munsell:"3PB 4/7.5",h:"3PB",v:4,c:7.5,origin:"和名",category:"青系",warm:"寒"},
+  {name:"藤色",reading:"ふじいろ",hex:"#9090C8",systematic:"明るい青みの紫",munsell:"10PB 6.5/6.5",h:"10PB",v:6.5,c:6.5,origin:"和名",category:"紫系",warm:"寒"},
+  {name:"江戸紫",reading:"えどむらさき",hex:"#602880",systematic:"こい青みの紫",munsell:"3P 3.5/7",h:"3P",v:3.5,c:7,origin:"和名",category:"紫系",warm:"寒"},
+  {name:"古代紫",reading:"こだいむらさき",hex:"#806090",systematic:"くすんだ紫",munsell:"7.5P 4/6",h:"7.5P",v:4,c:6,origin:"和名",category:"紫系",warm:"寒"},
+  {name:"銀鼠",reading:"ぎんねず",hex:"#C0C0B8",systematic:"明るい灰色",munsell:"N6.5",h:"N",v:6.5,c:0,origin:"和名",category:"白・灰・黒系",warm:"中"},
+  {name:"茶鼠",reading:"ちゃねずみ",hex:"#B09080",systematic:"黄赤みの灰色",munsell:"5YR 6/1",h:"5YR",v:6,c:1,origin:"和名",category:"白・灰・黒系",warm:"中"},
+  {name:"利休鼠",reading:"りきゅうねずみ",hex:"#A0A890",systematic:"緑みの灰色",munsell:"2.5G 5/1",h:"2.5G",v:5,c:1,origin:"和名",category:"白・灰・黒系",warm:"中"},
+  {name:"煤竹色",reading:"すすたけいろ",hex:"#806040",systematic:"赤みを帯びた黄みの暗い灰色",munsell:"9.5YR 3.5/1.5",h:"9.5YR",v:3.5,c:1.5,origin:"和名",category:"茶系",warm:"暖"},
+  {name:"ローズピンク",reading:"Rose pink",hex:"#F08090",systematic:"明るい紫みの赤",munsell:"10RP 7/8",h:"10RP",v:7,c:8,origin:"洋名",category:"赤・ピンク系",warm:"暖"},
+  {name:"バーガンディー",reading:"Burgundy",hex:"#4A0010",systematic:"ごく暗い紫みの赤",munsell:"10RP 2/2.5",h:"10RP",v:2,c:2.5,origin:"洋名",category:"赤・ピンク系",warm:"暖"},
+  {name:"オールドローズ",reading:"Old rose",hex:"#C07870",systematic:"やわらかい赤",munsell:"1R 6/6.5",h:"1R",v:6,c:6.5,origin:"洋名",category:"赤・ピンク系",warm:"暖"},
+  {name:"ポピーレッド",reading:"Poppy red",hex:"#E02020",systematic:"あざやかな赤",munsell:"4R 5/14",h:"4R",v:5,c:14,origin:"洋名",category:"赤・ピンク系",warm:"暖"},
+  {name:"マルーン",reading:"Maroon",hex:"#6A1020",systematic:"暗い赤",munsell:"5R 2.5/6",h:"5R",v:2.5,c:6,origin:"洋名",category:"赤・ピンク系",warm:"暖"},
+  {name:"テラコッタ",reading:"Terracotta",hex:"#C06840",systematic:"くすんだ黄みの赤",munsell:"7.5R 4.5/8",h:"7.5R",v:4.5,c:8,origin:"洋名",category:"茶系",warm:"暖"},
+  {name:"バーントシェナ",reading:"Burnt sienna",hex:"#9A4020",systematic:"くすんだ黄赤",munsell:"10R 4.5/7.5",h:"10R",v:4.5,c:7.5,origin:"洋名",category:"茶系",warm:"暖"},
+  {name:"ローシェンナ",reading:"Raw sienna",hex:"#C08040",systematic:"つよい黄赤",munsell:"4YR 5/9",h:"4YR",v:5,c:9,origin:"洋名",category:"茶系",warm:"暖"},
+  {name:"タン",reading:"Tan",hex:"#C8A060",systematic:"くすんだ黄赤",munsell:"6YR 5/6",h:"6YR",v:5,c:6,origin:"洋名",category:"茶系",warm:"暖"},
+  {name:"エクルベイジュ",reading:"Ecru beige",hex:"#D4C090",systematic:"うすい赤みの黄",munsell:"7.5YR 8.5/4",h:"7.5YR",v:8.5,c:4,origin:"洋名",category:"黄・橙系",warm:"暖"},
+  {name:"ゴールデンイエロー",reading:"Golden yellow",hex:"#E8A800",systematic:"つよい赤みの黄",munsell:"7.5YR 7/10",h:"7.5YR",v:7,c:10,origin:"洋名",category:"黄・橙系",warm:"暖"},
+  {name:"アンバー",reading:"Amber",hex:"#B07820",systematic:"くすんだ赤みの黄",munsell:"8YR 5.5/6.5",h:"8YR",v:5.5,c:6.5,origin:"洋名",category:"黄・橙系",warm:"暖"},
+  {name:"バーントアンバー",reading:"Burnt umber",hex:"#703010",systematic:"ごく暗い赤みの黄",munsell:"10YR 3/3",h:"10YR",v:3,c:3,origin:"洋名",category:"茶系",warm:"暖"},
+  {name:"ローアンバー",reading:"Raw umber",hex:"#806020",systematic:"暗い黄",munsell:"2.5Y 4/6",h:"2.5Y",v:4,c:6,origin:"洋名",category:"茶系",warm:"暖"},
+  {name:"ネープルスイエロー",reading:"Naples yellow",hex:"#F0C840",systematic:"つよい黄",munsell:"2.5Y 8/7.5",h:"2.5Y",v:8,c:7.5,origin:"洋名",category:"黄・橙系",warm:"暖"},
+  {name:"ジョンブリアン",reading:"Jaune brillant",hex:"#F8D840",systematic:"あざやかな黄",munsell:"5Y 8.5/14",h:"5Y",v:8.5,c:14,origin:"洋名",category:"黄・橙系",warm:"暖"},
+  {name:"シャトルーズグリーン",reading:"Chartreuse green",hex:"#C8D800",systematic:"明るい黄緑",munsell:"4GY 8/10",h:"4GY",v:8,c:10,origin:"洋名",category:"緑系",warm:"中"},
+  {name:"グラスグリーン",reading:"Grass green",hex:"#608840",systematic:"くすんだ黄緑",munsell:"5GY 5/5",h:"5GY",v:5,c:5,origin:"洋名",category:"緑系",warm:"中"},
+  {name:"ミントグリーン",reading:"Mint green",hex:"#A8D8B0",systematic:"明るい緑",munsell:"2.5G 7.5/8",h:"2.5G",v:7.5,c:8,origin:"洋名",category:"緑系",warm:"寒"},
+  {name:"ボトルグリーン",reading:"Bottle green",hex:"#204820",systematic:"ごく暗い緑",munsell:"5G 2.5/3",h:"5G",v:2.5,c:3,origin:"洋名",category:"緑系",warm:"寒"},
+  {name:"ナイルブルー",reading:"Nile blue",hex:"#708898",systematic:"くすんだ青緑",munsell:"10BG 5.5/5",h:"10BG",v:5.5,c:5,origin:"洋名",category:"青系",warm:"寒"},
+  {name:"リーフグリーン",reading:"Leaf green",hex:"#708040",systematic:"つよい黄緑",munsell:"3GY 4/7",h:"3GY",v:4,c:7,origin:"洋名",category:"緑系",warm:"中"},
+  {name:"アップルグリーン",reading:"Apple green",hex:"#A0C840",systematic:"やわらかい黄みの緑",munsell:"10GY 8/5",h:"10GY",v:8,c:5,origin:"洋名",category:"緑系",warm:"中"},
+  {name:"マラカイトグリーン",reading:"Malachite green",hex:"#408860",systematic:"こい緑",munsell:"4G 4.5/9",h:"4G",v:4.5,c:9,origin:"洋名",category:"緑系",warm:"寒"},
+  {name:"ピーコックグリーン",reading:"Peacock green",hex:"#309870",systematic:"あざやかな青緑",munsell:"7.5BG 4.5/9",h:"7.5BG",v:4.5,c:9,origin:"洋名",category:"緑系",warm:"寒"},
+  {name:"セルリアンブルー",reading:"Cerulean blue",hex:"#4090A8",systematic:"あざやかな青",munsell:"9B 4.5/9",h:"9B",v:4.5,c:9,origin:"洋名",category:"青系",warm:"寒"},
+  {name:"ミッドナイトブルー",reading:"Midnight blue",hex:"#181840",systematic:"ごく暗い紫みの青",munsell:"5PB 1.5/2",h:"5PB",v:1.5,c:2,origin:"洋名",category:"青系",warm:"寒"},
+  {name:"サックスブルー",reading:"Saxe blue",hex:"#6088A8",systematic:"くすんだ青",munsell:"1PB 5/4.5",h:"1PB",v:5,c:4.5,origin:"洋名",category:"青系",warm:"寒"},
+  {name:"ウイスタリア",reading:"Wistaria",hex:"#8860A8",systematic:"あざやかな青紫",munsell:"10PB 5/12",h:"10PB",v:5,c:12,origin:"洋名",category:"紫系",warm:"寒"},
+  {name:"ライラック",reading:"Lilac",hex:"#C090C0",systematic:"やわらかい紫",munsell:"6P 7/6",h:"6P",v:7,c:6,origin:"洋名",category:"紫系",warm:"寒"},
+  {name:"スレートグレイ",reading:"Slate grey",hex:"#607080",systematic:"暗い灰色",munsell:"2.5PB 3.5/0.5",h:"2.5PB",v:3.5,c:0.5,origin:"洋名",category:"白・灰・黒系",warm:"寒"},
+  {name:"ランプブラック",reading:"Lamp black",hex:"#202020",systematic:"黒",munsell:"N1",h:"N",v:1,c:0,origin:"洋名",category:"白・灰・黒系",warm:"中"},
+];
+
+// 背景テーマ（検定色から選択）
+const BG_THEMES=[
+  {name:"桜色",reading:"さくらいろ",hex:"#FAE8EC"},
+  {name:"甕覗き",reading:"かめのぞき",hex:"#D8F0EC"},
+  {name:"刈安色",reading:"かりやすいろ",hex:"#F5F0D8"},
+  {name:"藤色",reading:"ふじいろ",hex:"#E8E8F5"},
+  {name:"銀鼠",reading:"ぎんねず",hex:"#EDEDEB"},
+  {name:"鶸色",reading:"ひわいろ",hex:"#EDF5D0"},
+  {name:"鴇色",reading:"ときいろ",hex:"#FAE8E8"},
+  {name:"ミントグリーン",reading:"Mint green",hex:"#E8F5EC"},
+  {name:"夜（黒）",reading:"くろ",hex:"#1A1A2A"},
+];
+
+const MEDALS=[
+  {id:"first",icon:"🌸",name:"はじめの一歩",desc:"初めて正解"},
+  {id:"combo5",icon:"🔥",name:"8連続正解",desc:"コンボ8達成"},
+  {id:"combo10",icon:"⚡",name:"15連続正解",desc:"コンボ15達成"},
+  {id:"perfect",icon:"💎",name:"パーフェクト",desc:"全問正解"},
+  {id:"hue",icon:"🎨",name:"色相マスター",desc:"色相ならべクリア"},
+  {id:"munsell10",icon:"📐",name:"マンセル博士",desc:"マンセル10問全正解"},
+  {id:"slider",icon:"🌗",name:"トーンの達人",desc:"スライダー高得点"},
+  {id:"fall20",icon:"☄️",name:"トーンの星",desc:"トーン分類全問正解"},
+  {id:"play30",icon:"🏅",name:"努力の証",desc:"50問挑戦"},
+  {id:"play100",icon:"👑",name:"慣用色名の女王",desc:"200問挑戦"},
+  {id:"night",icon:"🌙",name:"夜更かし学習",desc:"深夜0〜4時に学習"},
+  {id:"allcat",icon:"🌈",name:"全色相制覇",desc:"7カテゴリ全部で正解"},
+  {id:"hard",icon:"💪",name:"ハードチャレンジ",desc:"難しいモードで正解"},
+  {id:"harmony",icon:"🎭",name:"配色マスター",desc:"配色技法クイズ全問正解"},
+  {id:"streak7",icon:"🦋",name:"7日連続",desc:"7日連続ログイン"},
+];
+
+const DIFFICULTY=[
+  {level:1,name:"やさしい",desc:"4択・時間制限なし",color:"#C4907A"},
+  {level:2,name:"ふつう",desc:"4択・15秒制限あり",color:"#8860A8"},
+  {level:3,name:"むずかしい",desc:"6択・7秒制限・難問",color:"#C02020"},
+];
+
+const GREETINGS=[
+  (n)=>`おはよう${n}🌸 今日も一緒にがんばろう！`,
+  (n)=>`${n}、来てくれたね🐰 色の世界に飛び込もう！`,
+  (n)=>`やあ${n}！今日はどのゲームにする？`,
+  (n)=>`${n}、待ってたよ🌿 今日も色を楽しもう！`,
+  (n)=>`こんにちは${n}✨ 今日の目標は何色？`,
+  (n)=>`${n}、今日も素敵な一日にしよう🎨`,
+  (n)=>`おかえり${n}🌙 また学びに来てくれたね！`,
+  (n)=>`${n}、今日はどんな色と出会えるかな？`,
+  (n)=>`よっ${n}！色彩検定合格まであと少し💪`,
+  (n)=>`${n}、一問でも多く覚えて帰ろうね🌸`,
+  (n)=>`こんにちは${n}！慣用色名マスターへの道🎯`,
+  (n)=>`${n}、今日もコツコツ積み上げよう📚`,
+  (n)=>`やあ${n}✨ 今日は何のゲームをする？`,
+  (n)=>`${n}、色の名前って面白いよね🌈`,
+  (n)=>`おはよう${n}！今日も一緒に頑張ろうね🐰`,
+  (n)=>`${n}、新しい色の名前を覚えた日は特別な日🌷`,
+  (n)=>`こんにちは${n}！メダルを集めよう🏅`,
+  (n)=>`${n}、今日もここに来てくれてありがとう💕`,
+  (n)=>`やあ${n}🎀 今日の調子はどう？`,
+  (n)=>`${n}、色彩の世界を一緒に探検しよう🌍`,
+];
+
+// ===== TRIAL MODE =====
+const IS_TRIAL = true;
+const TRIAL_LIMIT = 3; // 各ゲーム3問でロック
+
+const SKEY="colormaster_g2_v3_trial";
+const loadSt=()=>{try{const s=localStorage.getItem(SKEY);return s?JSON.parse(s):null;}catch{return null;}};
+const saveSt=(st)=>{try{localStorage.setItem(SKEY,JSON.stringify(st));}catch{}};
+const defSt={medals:{},totalQ:0,totalC:0,catsC:{},combo:0,bestCombo:0,bestFall:0,difficulty:1,nickname:"",bgHex:"#FAE8EC",charIcon:"pink"};
+
+// キャラクター定義（SVGインライン）
+const CHAR_ICONS={
+  brown:{
+    label:"チョコうさぎ",
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <!-- 垂れ耳（左）：頭の横から下に垂れる -->
+      <path d="M22 38 Q8 30 10 55 Q12 72 26 74 Q36 72 34 55 Q34 40 22 38Z" fill="#9A5828"/>
+      <path d="M22 40 Q12 34 14 55 Q16 68 26 70 Q32 68 31 55 Q31 42 22 40Z" fill="#C4884A"/>
+      <!-- 垂れ耳（右）：頭の横から下に垂れる -->
+      <path d="M78 38 Q92 30 90 55 Q88 72 74 74 Q64 72 66 55 Q66 40 78 38Z" fill="#9A5828"/>
+      <path d="M78 40 Q88 34 86 55 Q84 68 74 70 Q68 68 69 55 Q69 42 78 40Z" fill="#C4884A"/>
+      <!-- 頭 -->
+      <ellipse cx="50" cy="54" rx="34" ry="31" fill="#9A5828"/>
+      <ellipse cx="50" cy="52" rx="32" ry="29" fill="#C4884A"/>
+      <!-- 口元の明るい部分 -->
+      <ellipse cx="50" cy="67" rx="16" ry="11" fill="#DCAA74"/>
+      <!-- 目 -->
+      <ellipse cx="39" cy="48" rx="6" ry="7" fill="#5A2A10"/>
+      <ellipse cx="61" cy="48" rx="6" ry="7" fill="#5A2A10"/>
+      <ellipse cx="40" cy="47" rx="2" ry="2.5" fill="white" opacity="0.5"/>
+      <ellipse cx="62" cy="47" rx="2" ry="2.5" fill="white" opacity="0.5"/>
+      <!-- 鼻 -->
+      <ellipse cx="50" cy="61" rx="4" ry="3" fill="#7A3A18"/>
+      <!-- 口 -->
+      <path d="M47 64 Q50 67 53 64" stroke="#7A3A18" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- ひげ -->
+      <line x1="30" y1="62" x2="43" y2="63" stroke="#9A7050" stroke-width="1" opacity="0.6"/>
+      <line x1="30" y1="65" x2="43" y2="65" stroke="#9A7050" stroke-width="1" opacity="0.6"/>
+      <line x1="57" y1="63" x2="70" y2="62" stroke="#9A7050" stroke-width="1" opacity="0.6"/>
+      <line x1="57" y1="65" x2="70" y2="65" stroke="#9A7050" stroke-width="1" opacity="0.6"/>
+      <!-- 蝶ネクタイ -->
+      <path d="M43 76 L50 80 L57 76 L50 72Z" fill="#D4A050"/>
+      <ellipse cx="50" cy="76" rx="3" ry="2.5" fill="#C49040"/>
+    </svg>`
+  },
+  pink:{
+    label:"さくらうさぎ",
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <ellipse cx="32" cy="30" rx="10" ry="26" fill="#F0A0C0" transform="rotate(-10,32,30)"/>
+      <ellipse cx="68" cy="30" rx="10" ry="26" fill="#F0A0C0" transform="rotate(10,68,30)"/>
+      <ellipse cx="32" cy="30" rx="6" ry="20" fill="#F5C8D8" transform="rotate(-10,32,30)"/>
+      <ellipse cx="68" cy="30" rx="6" ry="20" fill="#F5C8D8" transform="rotate(10,68,30)"/>
+      <ellipse cx="50" cy="64" rx="36" ry="32" fill="#F0A0C0"/>
+      <ellipse cx="50" cy="74" rx="18" ry="12" fill="#FFF0F5"/>
+      <ellipse cx="38" cy="59" rx="7" ry="8" fill="#6B3060"/>
+      <ellipse cx="62" cy="59" rx="7" ry="8" fill="#6B3060"/>
+      <ellipse cx="50" cy="72" rx="4" ry="3" fill="#B06090"/>
+      <path d="M46 75 Q50 78 54 75" stroke="#B06090" stroke-width="1.5" fill="none"/>
+    </svg>`
+  }
+};
+
+function getLuma(hex){const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;return 0.299*r+0.587*g+0.114*b;}
+function rgba(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+const isDark=(hex)=>getLuma(hex)<0.35;
+
+// ===== TRIAL LOCK SCREEN =====
+function TrialLock({onBack}){
+  return(
+    <div className="fu" style={{padding:"36px 20px",textAlign:"center",maxWidth:440,margin:"0 auto"}}>
+      <div style={{width:80,height:80,margin:"0 auto 16px",display:"flex",alignItems:"center",justifyContent:"center"}}
+        dangerouslySetInnerHTML={{__html:CHAR_ICONS.pink.svg}}/>
+      <div style={{fontSize:20,fontWeight:700,color:"#1A1208",marginBottom:6,lineHeight:1.5}}>
+        3問やってみてどうだった？<br/>
+        <span style={{color:"#C4907A"}}>このアプリで、もっと深くまで学べるよ✨</span>
+      </div>
+      <div style={{fontSize:13,color:"#8A7060",marginBottom:20,lineHeight:1.7}}>
+        お試し版は各ゲーム3問まで。<br/>完全版では制限なく学習できます！
+      </div>
+      <div style={{background:"#FFF4EE",borderRadius:18,padding:"18px 20px",marginBottom:20,border:"1.5px solid #EDD0C0",textAlign:"left"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#C4907A",marginBottom:10}}>🌟 完全版でできること</div>
+        {[
+          "📖 フラッシュカード：全63色・色名を4〜6択で当てる",
+          "🎨 トーン分類ゲーム：PCCS12トーンを全問学習",
+          "🌈 色相ならべ：5ラウンド制・ドラッグ対応",
+          "📐 マンセル穴埋め：マンセル値10問・ビジュアルマップ付き",
+          "🎯 明度彩度スライダー：V・Cを感覚でマスター",
+          "🎭 配色技法クイズ：10技法・解説付き10問",
+          "🏅 15種類のメダル＆スタンプカードで達成感UP",
+          "⚙️ ニックネーム・キャラ・背景テーマを自由に設定",
+          "🌙 やさしい〜むずかしい 3段階の難易度",
+        ].map((item,i)=>(
+          <div key={i} style={{fontSize:12,fontWeight:600,color:"#5A3A20",marginBottom:6,lineHeight:1.5}}>{item}</div>
+        ))}
+      </div>
+      <div style={{fontSize:28,fontWeight:700,color:"#C4907A",marginBottom:4}}>¥680</div>
+      <div style={{fontSize:12,color:"#8A7060",marginBottom:20}}>買い切り・一度購入すれば永久に使えます</div>
+      <button onClick={onBack} style={{width:"100%",padding:"14px",borderRadius:14,border:"2px solid #DDD0C8",background:"white",color:"#5A3A20",fontSize:14,fontWeight:700}}>
+        ← ホームに戻る
+      </button>
+    </div>
+  );
+}
+
+// ===== FLASH CARD =====
+function FlashCard({gs,setGs,onBack}){
+  const diff=gs.difficulty||1;
+  const choicesN=diff>=3?6:4;
+  const [deck]=useState(()=>shuffle(colors));
+  const [idx,setIdx]=useState(0);
+  const [choices,setChoices]=useState([]);
+  const [chosen,setChosen]=useState(null);
+  const [streak,setStreak]=useState(0);
+  const [score,setScore]=useState(0);
+  const [done,setDone]=useState(false);
+  const [toast,setToast]=useState(null);
+  const [timeLeft,setTimeLeft]=useState(null);
+  const timerRef=useRef(null);
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const sc=dark?"rgba(245,238,232,0.65)":"rgba(26,18,8,0.55)";
+  const cardBg=dark?"rgba(255,255,255,0.1)":"white";
+
+  const makeChoices=useCallback((i)=>{
+    const correct=deck[i];
+    const others=shuffle(colors.filter(c=>c.name!==correct.name)).slice(0,choicesN-1);
+    setChoices(shuffle([correct,...others]));
+    setChosen(null);
+    if(diff>=2)setTimeLeft(diff>=3?7:15);
+  },[deck,diff,choicesN]);
+
+  useEffect(()=>{if(idx<deck.length)makeChoices(idx);},[idx,makeChoices]);
+
+  useEffect(()=>{
+    if(diff<2||chosen||timeLeft===null)return;
+    if(timeLeft<=0){doAnswer(null);return;}
+    timerRef.current=setTimeout(()=>setTimeLeft(t=>t-1),1000);
+    return()=>clearTimeout(timerRef.current);
+  },[timeLeft,chosen,diff]);
+
+  const showToast=(msg)=>{setToast(msg);setTimeout(()=>setToast(null),1400);};
+
+  const doAnswer=(c)=>{
+    if(chosen)return;
+    clearTimeout(timerRef.current);
+    setChosen(c?c.name:"__miss__");
+    const correct=deck[idx];
+    const isOk=c&&c.name===correct.name;
+    const ng={...gs,totalQ:(gs.totalQ||0)+1};
+    const earned=[];
+    if(isOk){
+      ng.totalC=(gs.totalC||0)+1;
+      ng.combo=(gs.combo||0)+1;
+      ng.bestCombo=Math.max(ng.combo,gs.bestCombo||0);
+      setScore(s=>s+1);setStreak(s=>s+1);
+      const cats={...(gs.catsC||{})};cats[correct.category]=(cats[correct.category]||0)+1;ng.catsC=cats;
+      if(!gs.medals?.first){ng.medals={...(ng.medals||{}),first:true};earned.push("first");}
+      if(ng.combo>=8&&!gs.medals?.combo5){ng.medals={...ng.medals,combo5:true};earned.push("combo5");}
+      if(ng.combo>=15&&!gs.medals?.combo10){ng.medals={...ng.medals,combo10:true};earned.push("combo10");}
+      if(Object.keys(ng.catsC||{}).length>=7&&!gs.medals?.allcat){ng.medals={...ng.medals,allcat:true};earned.push("allcat");}
+      if(diff>=3&&!gs.medals?.hard){ng.medals={...ng.medals,hard:true};earned.push("hard");}
+    }else{ng.combo=0;setStreak(0);}
+    if(ng.totalQ>=50&&!gs.medals?.play30){ng.medals={...(ng.medals||{}),play30:true};earned.push("play30");}
+    if(ng.totalQ>=200&&!gs.medals?.play100){ng.medals={...(ng.medals||{}),play100:true};earned.push("play100");}
+    const h=new Date().getHours();
+    if(h>=0&&h<4&&!gs.medals?.night){ng.medals={...(ng.medals||{}),night:true};earned.push("night");}
+    setGs(ng);saveSt(ng);
+    if(earned.length){const m=MEDALS.find(m=>m.id===earned[0]);if(m)showToast(`${m.icon} ${m.name} 獲得！`);}
+    setTimeout(()=>{if(idx+1>=deck.length)setDone(true);else setIdx(i=>i+1);},900);
+  };
+
+  // トライアルロック
+  if(IS_TRIAL && idx >= TRIAL_LIMIT && !done){
+    return <TrialLock onBack={onBack} gameName="フラッシュカード"/>;
+  }
+
+  if(done){
+    const isPerfect=score===deck.length;
+    if(isPerfect&&!gs.medals?.perfect){const ng={...gs,medals:{...(gs.medals||{}),perfect:true}};setGs(ng);saveSt(ng);}
+    return(
+      <div className="fu" style={{padding:"40px 20px",textAlign:"center"}}>
+        <div style={{fontSize:52,marginBottom:12}}>{isPerfect?"💎":"🌸"}</div>
+        <div style={{fontSize:22,fontWeight:700,color:tc,marginBottom:8}}>結果発表</div>
+        <div style={{fontSize:52,fontWeight:700,color:"#C4907A",marginBottom:4}}>{score}<span style={{fontSize:18,color:sc}}> / {deck.length}</span></div>
+        {isPerfect&&<div style={{fontSize:15,fontWeight:700,color:"#C8A050",marginBottom:8}}>💎 パーフェクト！</div>}
+        <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
+          <button onClick={onBack} style={{padding:"12px 24px",borderRadius:14,border:"2px solid #DDD0C8",background:cardBg,color:tc,fontSize:14,fontWeight:700}}>ホームへ</button>
+          <button onClick={()=>{setIdx(0);setScore(0);setStreak(0);setDone(false);}} style={{padding:"12px 24px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:14,fontWeight:700}}>もう一度</button>
+        </div>
+      </div>
+    );
+  }
+
+  const card=deck[idx];
+  const cdark=getLuma(card.hex)<0.42;
+  const ctp=cdark?"#fff":"#1A1208";
+  const cts=cdark?"rgba(255,255,255,0.7)":"rgba(26,18,8,0.55)";
+
+  return(
+    <div style={{padding:"16px 16px 40px"}}>
+      {toast&&<div className="pop" style={{position:"fixed",top:68,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#C8A050,#E8C870)",color:"white",borderRadius:20,padding:"8px 20px",fontSize:14,fontWeight:700,zIndex:200,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(200,160,80,.5)"}}>{toast}</div>}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <span style={{fontSize:14,fontWeight:700,color:tc}}>{idx+1} / {deck.length}</span>
+        {diff>=2&&timeLeft!==null&&<span style={{fontSize:14,fontWeight:700,color:timeLeft<=5?"#DD2222":"#C4907A"}}>⏱ {timeLeft}s</span>}
+        <span style={{fontSize:14,fontWeight:700,color:"#C4907A"}}>🔥{streak}　✓{score}</span>
+      </div>
+      <div style={{height:5,background:"rgba(0,0,0,0.1)",borderRadius:3,marginBottom:14,overflow:"hidden"}}>
+        <div style={{height:"100%",background:"linear-gradient(90deg,#C4907A,#D4A898)",width:`${(idx/deck.length)*100}%`,borderRadius:3,transition:"width .3s"}}/>
+      </div>
+      <div style={{borderRadius:20,background:card.hex,minHeight:148,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",marginBottom:14,boxShadow:`0 12px 40px ${rgba(card.hex,.45)}`,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,.1)",borderRadius:"0 0 50% 50%",pointerEvents:"none"}}/>
+        <div style={{fontSize:13,fontWeight:700,color:cts,letterSpacing:".1em",marginBottom:6}}>この色の名前は？</div>
+        <div style={{fontSize:14,fontWeight:700,color:cts}}>{card.systematic}</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:choicesN===6?"1fr 1fr 1fr":"1fr 1fr",gap:8}}>
+        {choices.map(c=>{
+          let bg2="white",border="2px solid #DDD0C8",col2="#1A1208";
+          if(chosen){if(c.name===card.name){bg2="#E8FBE8";border="2px solid #44BB44";col2="#1A6A1A";}else if(c.name===chosen){bg2="#FBE8E8";border="2px solid #EE4444";col2="#AA2222";}}
+          return(
+            <button key={c.name} onClick={()=>doAnswer(c)} style={{padding:"13px 8px",borderRadius:14,border,background:bg2,color:col2,fontSize:choicesN===6?12:15,fontWeight:700,lineHeight:1.3,boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+              {c.name}
+              <div style={{fontSize:10,color:chosen?col2:"#9A8878",marginTop:2,fontWeight:500}}>{c.reading}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ===== TONE CLASSIFICATION GAME =====
+// PCCSトーン：色彩検定2級範囲
+const PCCS_TONES=[
+  {id:"v",name:"ビビッド",label:"vivid (v)",desc:"最も彩度が高い・鮮やか",hue:"高彩度・中明度"},
+  {id:"b",name:"ブライト",label:"bright (b)",desc:"明るく鮮やか",hue:"高彩度・高明度"},
+  {id:"s",name:"ストロング",label:"strong (s)",desc:"強くて鮮やか",hue:"高彩度・中明度寄り"},
+  {id:"dp",name:"ディープ",label:"deep (dp)",desc:"深く濃い",hue:"高彩度・低明度"},
+  {id:"lt",name:"ライト",label:"light (lt)",desc:"明るく柔らか",hue:"中彩度・高明度"},
+  {id:"sf",name:"ソフト",label:"soft (sf)",desc:"柔らかく穏やか",hue:"中彩度・中明度"},
+  {id:"d",name:"ダル",label:"dull (d)",desc:"くすんで地味",hue:"中彩度・中低明度"},
+  {id:"dk",name:"ダーク",label:"dark (dk)",desc:"暗くて重い",hue:"中彩度・低明度"},
+  {id:"p",name:"ペール",label:"pale (p)",desc:"淡く薄い・パステル",hue:"低彩度・高明度"},
+  {id:"ltg",name:"ライトグレイッシュ",label:"light grayish (ltg)",desc:"明るい灰みがかった",hue:"低彩度・高中明度"},
+  {id:"g",name:"グレイッシュ",label:"grayish (g)",desc:"灰みがかった",hue:"低彩度・中明度"},
+  {id:"dkg",name:"ダークグレイッシュ",label:"dark grayish (dkg)",desc:"暗い灰みがかった",hue:"低彩度・低明度"},
+];
+
+// トーンに対応する代表色（Munsell彩度・明度から判定）
+function getToneId(v,c){
+  if(c>=10){if(v>=6)return "b";if(v>=3)return "v";return "dp";}
+  if(c>=6){if(v>=7)return "lt";if(v>=5)return "s";if(v>=3)return "d";return "dk";}
+  if(c>=3){if(v>=7)return "p";if(v>=5)return "sf";if(v>=3)return "g";return "dkg";}
+  if(v>=7)return "p";if(v>=4)return "ltg";return "dkg";
+}
+
+// ===== PCCS TONE MAP COMPONENT =====
+// 明度（縦）×彩度（横）のグリッドでトーンを配置
+const TONE_MAP_LAYOUT=[
+  // [id, col(彩度0=左), row(明度0=上), w, h]
+  // 高明度帯
+  {id:"p",   col:0, row:0, w:2, h:1, color:"#F5E6F0"},
+  {id:"ltg", col:0, row:1, w:2, h:1, color:"#D8CED8"},
+  {id:"lt",  col:2, row:0, w:2, h:1, color:"#F0C8D8"},
+  {id:"b",   col:4, row:0, w:2, h:1, color:"#F08080"},
+  // 中明度帯
+  {id:"g",   col:0, row:2, w:2, h:1, color:"#B0A8B0"},
+  {id:"sf",  col:2, row:1, w:2, h:1, color:"#D09898"},
+  {id:"s",   col:4, row:1, w:2, h:1, color:"#E04040"},
+  {id:"v",   col:4, row:2, w:2, h:1, color:"#CC0000"},
+  // 低明度帯
+  {id:"dkg", col:0, row:3, w:2, h:1, color:"#706870"},
+  {id:"d",   col:2, row:2, w:2, h:1, color:"#906870"},
+  {id:"dk",  col:2, row:3, w:2, h:1, color:"#602840"},
+  {id:"dp",  col:4, row:3, w:2, h:1, color:"#880020"},
+];
+
+function PCCSMap({highlightId, answeredId}){
+  const cols=6;const rows=4;
+  // セルサイズ（px単位で固定、縦横比を保つ）
+  const cellW=44;const cellH=30;
+  const mapW=cols*cellW;const mapH=rows*cellH;
+  const toneById=Object.fromEntries(PCCS_TONES.map(t=>[t.id,t]));
+
+  return(
+    <div style={{marginTop:12,borderRadius:14,overflow:"hidden",border:"2px solid #DDD0C8",background:"#FAF5F0"}}>
+      {/* 横軸ラベル */}
+      <div style={{display:"flex",justifyContent:"space-between",padding:"4px 10px 2px",background:"#F5EEE8"}}>
+        <span style={{fontSize:9,fontWeight:700,color:"#9A8878"}}>← 低彩度</span>
+        <span style={{fontSize:9,fontWeight:700,color:"#9A8878"}}>高彩度 →</span>
+      </div>
+      <div style={{display:"flex",alignItems:"stretch"}}>
+        {/* 縦軸ラベル：1文字ずつdivで縦並び */}
+        <div style={{width:18,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",background:"#F5EEE8",flexShrink:0,gap:0,padding:"2px 0"}}>
+          {"高↑明度↓低".split("").map((ch,i)=>(
+            <span key={i} style={{fontSize:7,fontWeight:700,color:"#9A8878",lineHeight:"1.5",display:"block",textAlign:"center"}}>{ch}</span>
+          ))}
+        </div>
+        {/* マップ本体：SVGをviewBoxと同じ縦横比で表示 */}
+        <div style={{flex:1,overflow:"hidden"}}>
+          <svg
+            viewBox={`0 0 ${mapW} ${mapH}`}
+            style={{width:"100%",display:"block"}}
+            preserveAspectRatio="xMidYMid meet">
+            {TONE_MAP_LAYOUT.map(t=>{
+              const isCorrect=t.id===highlightId;
+              const isWrong=t.id===answeredId&&answeredId!==highlightId&&answeredId!=="__miss__";
+              const x=t.col*cellW;const y=t.row*cellH;
+              const w=t.w*cellW;const h=t.h*cellH;
+              const textColor=isCorrect||isWrong?"white":getLuma(t.color)<0.35?"rgba(255,255,255,0.9)":"rgba(30,10,5,0.8)";
+              return(
+                <g key={t.id}>
+                  <rect x={x+1} y={y+1} width={w-2} height={h-2} rx="4"
+                    fill={isCorrect?"#44CC44":isWrong?"#FF5555":t.color}
+                    stroke={isCorrect?"#228822":isWrong?"#CC2222":"rgba(255,255,255,0.5)"}
+                    strokeWidth={isCorrect||isWrong?"2":"0.8"}
+                    opacity={highlightId&&!isCorrect&&!isWrong?0.45:1}
+                  />
+                  {/* トーン略称（大） */}
+                  <text x={x+w/2} y={y+h/2-4} textAnchor="middle" dominantBaseline="middle"
+                    fontSize="11" fontWeight="800" fill={textColor}>
+                    {t.id}
+                  </text>
+                  {/* 日本語名（小） */}
+                  <text x={x+w/2} y={y+h/2+7} textAnchor="middle" dominantBaseline="middle"
+                    fontSize="7" fontWeight="600" fill={textColor} opacity="0.9">
+                    {(toneById[t.id]?.name||"").slice(0,5)}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+      {/* 凡例 */}
+      {highlightId&&(
+        <div style={{padding:"5px 8px",background:"#F5EEE8",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          <div style={{display:"flex",alignItems:"center",gap:3}}>
+            <div style={{width:10,height:10,borderRadius:3,background:"#44CC44"}}/>
+            <span style={{fontSize:9,fontWeight:700,color:"#228822"}}>正解：{toneById[highlightId]?.name}（{highlightId}）</span>
+          </div>
+          {answeredId&&answeredId!==highlightId&&answeredId!=="__miss__"&&(
+            <div style={{display:"flex",alignItems:"center",gap:3}}>
+              <div style={{width:10,height:10,borderRadius:3,background:"#FF5555"}}/>
+              <span style={{fontSize:9,fontWeight:700,color:"#CC2222"}}>あなたの答え：{toneById[answeredId]?.name}（{answeredId}）</span>
+            </div>
+          )}
+          {answeredId==="__miss__"&&(
+            <span style={{fontSize:9,fontWeight:700,color:"#888888"}}>⏱ 時間切れ</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToneGame({gs,setGs,onBack}){
+  const TOTAL=12;
+  const diff=gs.difficulty||1;
+  const choicesN=diff>=3?6:4;
+  const [deck]=useState(()=>{
+    // 各トーンから色を選ぶ
+    const picked=[];
+    const used=new Set();
+    // まず各トーンに対応する色をなるべく網羅
+    PCCS_TONES.forEach(tone=>{
+      const match=colors.filter(c=>{
+        const t=getToneId(c.v,c.c);
+        return t===tone.id&&!used.has(c.name);
+      });
+      if(match.length>0){
+        const pick=match[Math.floor(Math.random()*match.length)];
+        picked.push({...pick,correctToneId:tone.id});
+        used.add(pick.name);
+      }
+    });
+    return shuffle(picked).slice(0,TOTAL);
+  });
+  const [idx,setIdx]=useState(0);
+  const [choices,setChoices]=useState([]);
+  const [chosen,setChosen]=useState(null);
+  const [score,setScore]=useState(0);
+  const [done,setDone]=useState(false);
+  const [toast,setToast]=useState(null);
+  const [timeLeft,setTimeLeft]=useState(null);
+  const timerRef=useRef(null);
+
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const sc=dark?"rgba(245,238,232,0.65)":"rgba(26,18,8,0.55)";
+  const cardBg=dark?"rgba(255,255,255,0.1)":"white";
+
+  const makeChoices=useCallback((i)=>{
+    if(i>=deck.length)return;
+    const correct=PCCS_TONES.find(t=>t.id===deck[i].correctToneId);
+    const others=shuffle(PCCS_TONES.filter(t=>t.id!==correct.id)).slice(0,choicesN-1);
+    setChoices(shuffle([correct,...others]));
+    setChosen(null);
+    if(diff>=2)setTimeLeft(diff>=3?7:15);
+  },[deck,diff,choicesN]);
+
+  useEffect(()=>{if(idx<deck.length)makeChoices(idx);},[idx,makeChoices]);
+
+  useEffect(()=>{
+    if(diff<2||chosen||timeLeft===null)return;
+    if(timeLeft<=0){doAnswer(null);return;}
+    timerRef.current=setTimeout(()=>setTimeLeft(t=>t-1),1000);
+    return()=>clearTimeout(timerRef.current);
+  },[timeLeft,chosen,diff]);
+
+  const showToast=(msg)=>{setToast(msg);setTimeout(()=>setToast(null),1800);};
+
+  const doAnswer=(t)=>{
+    if(chosen!==null)return;
+    clearTimeout(timerRef.current);
+    const correct=deck[idx].correctToneId;
+    const isOk=t&&t.id===correct;
+    setChosen(t?t.id:"__miss__");
+    const ng={...gs,totalQ:(gs.totalQ||0)+1};
+    const earned=[];
+    if(isOk){
+      ng.totalC=(gs.totalC||0)+1;
+      ng.combo=(gs.combo||0)+1;
+      ng.bestCombo=Math.max(ng.combo,gs.bestCombo||0);
+      setScore(s=>s+1);
+      const cats={...(gs.catsC||{})};cats[deck[idx].category]=(cats[deck[idx].category]||0)+1;ng.catsC=cats;
+      if(!gs.medals?.first){ng.medals={...(ng.medals||{}),first:true};earned.push("first");}
+      if(ng.combo>=8&&!gs.medals?.combo5){ng.medals={...ng.medals,combo5:true};earned.push("combo5");}
+      if(ng.combo>=15&&!gs.medals?.combo10){ng.medals={...ng.medals,combo10:true};earned.push("combo10");}
+      if(Object.keys(ng.catsC||{}).length>=7&&!gs.medals?.allcat){ng.medals={...ng.medals,allcat:true};earned.push("allcat");}
+      if(diff>=3&&!gs.medals?.hard){ng.medals={...ng.medals,hard:true};earned.push("hard");}
+    }else{ng.combo=0;}
+    if(ng.totalQ>=50&&!gs.medals?.play30){ng.medals={...(ng.medals||{}),play30:true};earned.push("play30");}
+    if(ng.totalQ>=200&&!gs.medals?.play100){ng.medals={...(ng.medals||{}),play100:true};earned.push("play100");}
+    const h=new Date().getHours();
+    if(h>=0&&h<4&&!gs.medals?.night){ng.medals={...(ng.medals||{}),night:true};earned.push("night");}
+    // fall20 → tone12として流用（全問正解でスピードスター）
+    setGs(ng);saveSt(ng);
+    if(earned.length){const m=MEDALS.find(m=>m.id===earned[0]);if(m)showToast(`${m.icon} ${m.name} 獲得！`);}
+    // マップを見てから手動で次へ進む（自動遷移しない）
+  };
+
+  if(done){
+    const isPerfect=score===deck.length;
+    if(isPerfect&&!gs.medals?.perfect){const ng={...gs,medals:{...(gs.medals||{}),perfect:true}};setGs(ng);saveSt(ng);}
+    // fall20メダル：トーン全問正解
+    if(isPerfect&&!gs.medals?.fall20){const ng2={...gs,medals:{...(gs.medals||{}),fall20:true,perfect:true}};setGs(ng2);saveSt(ng2);}
+    return(
+      <div className="fu" style={{padding:"40px 20px",textAlign:"center"}}>
+        <div style={{fontSize:52,marginBottom:12}}>{isPerfect?"🎨":"🌸"}</div>
+        <div style={{fontSize:22,fontWeight:700,color:tc,marginBottom:8}}>結果発表</div>
+        <div style={{fontSize:52,fontWeight:700,color:"#C4907A",marginBottom:4}}>{score}<span style={{fontSize:18,color:sc}}> / {deck.length}</span></div>
+        {isPerfect&&<div style={{fontSize:15,fontWeight:700,color:"#C8A050",marginBottom:8}}>🎨 トーン完全制覇！</div>}
+        <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
+          <button onClick={onBack} style={{padding:"12px 24px",borderRadius:14,border:"2px solid #DDD0C8",background:cardBg,color:tc,fontSize:14,fontWeight:700}}>ホームへ</button>
+          <button onClick={()=>{setIdx(0);setScore(0);setDone(false);}} style={{padding:"12px 24px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:14,fontWeight:700}}>もう一度</button>
+        </div>
+      </div>
+    );
+  }
+
+  // トライアルロック
+  if(IS_TRIAL && idx >= TRIAL_LIMIT && !done){
+    return <TrialLock onBack={onBack} gameName="トーン分類ゲーム"/>;
+  }
+
+  if(!deck[idx])return null;
+  const card=deck[idx];
+  const timerPct=diff>=2?(timeLeft/(diff>=3?7:15))*100:100;
+  const timerColor=timeLeft<=3?"#EE4444":timeLeft<=6?"#E8A800":"#44BB88";
+
+  return(
+    <div style={{padding:"16px 16px 40px"}}>
+      {toast&&<div className="pop" style={{position:"fixed",top:68,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#C8A050,#E8C870)",color:"white",borderRadius:20,padding:"8px 20px",fontSize:14,fontWeight:700,zIndex:200,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(200,160,80,.5)"}}>{toast}</div>}
+
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <span style={{fontSize:14,fontWeight:700,color:tc}}>{idx+1} / {TOTAL}</span>
+        <span style={{fontSize:14,fontWeight:700,color:"#C4907A"}}>✓ {score}点</span>
+      </div>
+
+      {diff>=2&&(
+        <div style={{height:5,background:"rgba(0,0,0,0.1)",borderRadius:3,marginBottom:10,overflow:"hidden"}}>
+          <div style={{height:"100%",background:timerColor,width:`${timerPct}%`,borderRadius:3,transition:"width 1s linear,background .3s"}}/>
+        </div>
+      )}
+
+      {/* 色カード */}
+      <div className="fu" style={{borderRadius:24,background:card.hex,height:140,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",boxShadow:`0 16px 48px ${rgba(card.hex,.5)}`,marginBottom:14,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,.1)",borderRadius:"0 0 50% 50%",pointerEvents:"none"}}/>
+        <div style={{fontSize:20,fontWeight:700,color:ctp,marginBottom:3}}>{card.name}</div>
+        <div style={{fontSize:13,fontWeight:600,color:cts,marginBottom:4}}>{card.reading}</div>
+        <div style={{fontSize:12,fontWeight:600,color:cts,background:"rgba(0,0,0,0.12)",borderRadius:8,padding:"3px 10px"}}>V={card.v} / C={card.c}</div>
+        {chosen&&(
+          <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",background:chosen===card.correctToneId?"rgba(68,187,68,0.25)":chosen==="__miss__"?"rgba(100,100,100,0.25)":"rgba(238,68,68,0.25)",borderRadius:24}}>
+            <div style={{fontSize:36}}>{chosen===card.correctToneId?"✓":chosen==="__miss__"?"⏱":"✗"}</div>
+          </div>
+        )}
+        {chosen&&<div style={{position:"absolute",bottom:10,fontSize:13,fontWeight:700,color:ctp}}>{correctTone?.label}</div>}
+      </div>
+
+      <div style={{fontSize:13,fontWeight:700,color:tc,textAlign:"center",marginBottom:10}}>このトーンはどれ？</div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        {choices.map(t=>{
+          let bg2=cardBg,border="2px solid #DDD0C8",col2=tc;
+          if(chosen){
+            if(t.id===card.correctToneId){bg2="#E8FBE8";border="2px solid #44BB44";col2="#1A6A1A";}
+            else if(t.id===chosen){bg2="#FBE8E8";border="2px solid #EE4444";col2="#AA2222";}
+          }
+          return(
+            <button key={t.id} onClick={()=>doAnswer(t)} disabled={chosen!==null} style={{padding:"12px 10px",borderRadius:14,border,background:bg2,color:col2,textAlign:"left",boxShadow:"0 2px 8px rgba(0,0,0,.06)",opacity:chosen&&t.id!==card.correctToneId&&t.id!==chosen?0.55:1}}>
+              <div style={{fontSize:13,fontWeight:700,marginBottom:2}}>{t.name}</div>
+              <div style={{fontSize:10,fontWeight:600,color:chosen&&t.id===card.correctToneId?"#1A6A1A":chosen&&t.id===chosen?"#AA2222":"#9A8878",lineHeight:1.3}}>{t.label}</div>
+              <div style={{fontSize:10,color:chosen&&t.id===card.correctToneId?"#2A8A2A":"#B0A090",marginTop:2,lineHeight:1.3}}>{t.hue}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* PCCSマップ：回答後に表示 */}
+      {chosen&&(
+        <div className="fu">
+          <div style={{fontSize:12,fontWeight:700,color:sc,textAlign:"center",marginTop:14,marginBottom:4}}>📊 PCCSトーンマップ上の位置</div>
+          <PCCSMap highlightId={card.correctToneId} answeredId={chosen}/>
+          <div style={{marginTop:8,background:cardBg,border:`1.5px solid ${chosen===card.correctToneId?"#DDD0C8":"#FFCCCC"}`,borderRadius:12,padding:"8px 12px",marginBottom:12}}>
+            <div style={{fontSize:12,fontWeight:700,color:chosen===card.correctToneId?"#2A8A2A":"#CC2222",marginBottom:2}}>
+              {chosen===card.correctToneId?"✓ 正解！":"✗ 不正解"}　{PCCS_TONES.find(t=>t.id===card.correctToneId)?.name}（{card.correctToneId}）
+            </div>
+            <div style={{fontSize:11,fontWeight:600,color:sc,lineHeight:1.6}}>
+              {PCCS_TONES.find(t=>t.id===card.correctToneId)?.desc}　／　{PCCS_TONES.find(t=>t.id===card.correctToneId)?.hue}
+            </div>
+          </div>
+          <button
+            onClick={()=>{if(idx+1>=deck.length)setDone(true);else setIdx(i=>i+1);}}
+            style={{width:"100%",padding:"14px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:15,fontWeight:700,boxShadow:"0 4px 16px rgba(196,144,122,.4)"}}>
+            {idx+1>=deck.length?"結果を見る 🎨":"次の色へ →"}
+          </button>
+        </div>
+      )}
+
+      {diff>=2&&!chosen&&<div style={{textAlign:"center",fontSize:12,fontWeight:600,color:sc,marginTop:10}}>残り {timeLeft}秒</div>}
+    </div>
+  );
+}
+// ===== HUE SORT =====
+function HueGame({gs,setGs,onBack}){
+  const HUE_ORDER=["R","YR","Y","GY","G","BG","B","PB","P","RP"];
+  const hueIdx=(h)=>{if(!h||h==="N")return 999;const m=h.match(/([\d.]+)([A-Z]+)/);if(!m)return 999;return HUE_ORDER.indexOf(m[2])*10+parseFloat(m[1]);};
+  const TOTAL_ROUNDS=5;
+  const makeItems=()=>shuffle(colors.filter(c=>c.h!=="N")).slice(0,6).map(c=>({...c,hi:hueIdx(c.h)}));
+  const [round,setRound]=useState(1);
+  const [items,setItems]=useState(()=>makeItems());
+  const [order,setOrder]=useState(()=>items.map((_,i)=>i));
+  const [checking,setChecking]=useState(false);
+  const [correct,setCorrect]=useState(false);
+  const [score,setScore]=useState(0);
+  const [done,setDone]=useState(false);
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const sc=dark?"rgba(245,238,232,0.65)":"rgba(26,18,8,0.55)";
+
+  const sortedItems=order.map(i=>items[i]);
+  const checkOrder=()=>{
+    setChecking(true);
+    const sorted=[...sortedItems].sort((a,b)=>a.hi-b.hi);
+    const isOk=sortedItems.every((item,i)=>item.name===sorted[i].name);
+    setCorrect(isOk);
+    if(isOk){
+      const ns=score+1;setScore(ns);
+      const ng={...gs,totalQ:(gs.totalQ||0)+1,totalC:(gs.totalC||0)+1};
+      if(ns>=TOTAL_ROUNDS&&!gs.medals?.hue){ng.medals={...(ng.medals||{}),hue:true};}
+      setGs(ng);saveSt(ng);
+    }else{
+      const ng={...gs,totalQ:(gs.totalQ||0)+1};setGs(ng);saveSt(ng);
+    }
+  };
+  const move=(from,to)=>{const no=[...order];const[r]=no.splice(from,1);no.splice(to,0,r);setOrder(no);};
+  const nextRound=()=>{
+    if(round>=TOTAL_ROUNDS){setDone(true);return;}
+    const ni=makeItems();setItems(ni);setOrder(ni.map((_,i)=>i));setChecking(false);setCorrect(false);setRound(r=>r+1);
+  };
+
+  // トライアルロック（3ラウンド終了後）
+  if(IS_TRIAL && round > TRIAL_LIMIT && !done){
+    return <TrialLock onBack={onBack} gameName="色相ならべ"/>;
+  }
+
+  if(done)return(
+      <div style={{fontSize:22,fontWeight:700,color:tc,marginBottom:8}}>全{TOTAL_ROUNDS}ラウンド終了！</div>
+      <div style={{fontSize:52,fontWeight:700,color:"#C4907A"}}>{score}<span style={{fontSize:18,color:sc}}> / {TOTAL_ROUNDS}</span></div>
+      {score===TOTAL_ROUNDS&&<div style={{fontSize:14,fontWeight:700,color:"#C8A050",margin:"10px 0"}}>🎨 色相マスター獲得！</div>}
+      <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
+        <button onClick={onBack} style={{padding:"12px 24px",borderRadius:14,border:"2px solid #DDD0C8",background:"white",color:"#1A1208",fontSize:14,fontWeight:700}}>ホームへ</button>
+        <button onClick={()=>{setRound(1);setScore(0);setDone(false);const ni=makeItems();setItems(ni);setOrder(ni.map((_,i)=>i));setChecking(false);}} style={{padding:"12px 24px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:14,fontWeight:700}}>もう一度</button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{padding:"16px 16px 40px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <span style={{fontSize:14,fontWeight:700,color:tc}}>ラウンド {round} / {TOTAL_ROUNDS}</span>
+        <span style={{fontSize:14,fontWeight:700,color:"#C4907A"}}>✓ {score}正解</span>
+      </div>
+      <div style={{fontSize:13,fontWeight:700,color:sc,textAlign:"center",marginBottom:14,lineHeight:1.8}}>
+        色相環の順（R→YR→Y→GY→G→BG→B→PB→P→RP）に<br/>↑↓で並べ替えてください
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+        {sortedItems.map((item,i)=>(
+          <div key={item.name} style={{display:"flex",alignItems:"center",gap:10,background:"white",borderRadius:14,padding:"10px 14px",boxShadow:"0 2px 10px rgba(0,0,0,.07)",border:"2px solid #DDD0C8"}}>
+            <div style={{width:40,height:40,borderRadius:10,background:item.hex,flexShrink:0,boxShadow:`0 3px 10px ${rgba(item.hex,.4)}`}}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:16,fontWeight:700,color:"#1A1208"}}>{item.name}</div>
+              <div style={{fontSize:12,fontWeight:600,color:"#8A7060"}}>{item.munsell}</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              <button disabled={i===0||checking} onClick={()=>move(i,i-1)} style={{width:32,height:28,borderRadius:7,border:"2px solid #DDD0C8",background:i===0?"#F0E8E0":"white",color:"#6A5040",fontSize:14,fontWeight:700}}>↑</button>
+              <button disabled={i===sortedItems.length-1||checking} onClick={()=>move(i,i+1)} style={{width:32,height:28,borderRadius:7,border:"2px solid #DDD0C8",background:i===sortedItems.length-1?"#F0E8E0":"white",color:"#6A5040",fontSize:14,fontWeight:700}}>↓</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {checking?(
+        <div style={{textAlign:"center",padding:"8px 0 16px"}}>
+          {correct?(
+            <div>
+              <div style={{fontSize:32,marginBottom:6}}>✓</div>
+              <div style={{fontSize:15,fontWeight:700,color:"#1A6A1A",marginBottom:12}}>正解！</div>
+            </div>
+          ):(
+            <div>
+              <div style={{fontSize:32,marginBottom:6}}>✗</div>
+              <div style={{fontSize:14,fontWeight:700,color:"#CC4444",marginBottom:6}}>惜しい！</div>
+              <div style={{fontSize:12,fontWeight:600,color:"#8A7060",marginBottom:12,lineHeight:1.9}}>
+                正解順：{[...sortedItems].sort((a,b)=>a.hi-b.hi).map(c=>c.name).join(" → ")}
+              </div>
+            </div>
+          )}
+          <button onClick={nextRound} style={{width:"100%",padding:"14px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:15,fontWeight:700}}>
+            {round>=TOTAL_ROUNDS?"結果を見る":"次のラウンドへ →"}
+          </button>
+        </div>
+      ):(
+        <button onClick={checkOrder} style={{width:"100%",padding:"14px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:15,fontWeight:700}}>
+          この順番で確認する ✓
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ===== MUNSELL VISUAL COMPONENT =====
+const HUE_RING=[
+  {h:"R",  hex:"#E03030"},
+  {h:"YR", hex:"#E07020"},
+  {h:"Y",  hex:"#D8C000"},
+  {h:"GY", hex:"#88B800"},
+  {h:"G",  hex:"#208840"},
+  {h:"BG", hex:"#108878"},
+  {h:"B",  hex:"#2060B0"},
+  {h:"PB", hex:"#4040A0"},
+  {h:"P",  hex:"#7030A0"},
+  {h:"RP", hex:"#B02070"},
+];
+
+function MunsellVisual({card}){
+  const hueMatch=card.h&&card.h!=="N"?card.h.match(/([\d.]+)([A-Z]+)/):null;
+  const hueBase=hueMatch?hueMatch[2]:null;
+  const hueNum=hueMatch?parseFloat(hueMatch[1]):null;
+  const V=parseFloat(card.v)||0;
+  const C=parseFloat(card.c)||0;
+  const maxC=16;
+
+  // 色相環SVG
+  const cx=60;const cy=60;const outerR=50;const innerR=30;
+  const n=HUE_RING.length;
+  const sliceAngle=360/n;
+
+  function polarToXY(angle,r){
+    const rad=(angle-90)*Math.PI/180;
+    return{x:cx+r*Math.cos(rad),y:cy+r*Math.sin(rad)};
+  }
+  function slicePath(i){
+    const a1=i*sliceAngle;const a2=(i+1)*sliceAngle;
+    const o1=polarToXY(a1,outerR);const o2=polarToXY(a2,outerR);
+    const i1=polarToXY(a1,innerR);const i2=polarToXY(a2,innerR);
+    const laf=sliceAngle>180?1:0;
+    return`M${o1.x} ${o1.y} A${outerR} ${outerR} 0 ${laf} 1 ${o2.x} ${o2.y} L${i2.x} ${i2.y} A${innerR} ${innerR} 0 ${laf} 0 ${i1.x} ${i1.y}Z`;
+  }
+  // 正解色相のインデックスと角度
+  const hueIdx=HUE_RING.findIndex(h=>h.h===hueBase);
+  // 色相数値から0〜1の割合を計算（例：5R→0.5スライス分）
+  const hueAngle=hueIdx>=0?(hueIdx+(hueNum/10))*sliceAngle:null;
+  const markerPos=hueAngle!==null?polarToXY(hueAngle,(outerR+innerR)/2):null;
+
+  return(
+    <div className="fu" style={{marginTop:12,borderRadius:14,border:"2px solid #DDD0C8",background:"#FAF5F0",overflow:"hidden"}}>
+      <div style={{padding:"8px 12px 4px",background:"#F5EEE8"}}>
+        <span style={{fontSize:11,fontWeight:700,color:"#9A8878"}}>📐 マンセル表色系マップ　正解：{card.munsell}</span>
+      </div>
+
+      <div style={{display:"flex",gap:0}}>
+
+        {/* 左：色相環 */}
+        <div style={{flex:"0 0 130px",padding:"10px 6px 10px 10px",display:"flex",flexDirection:"column",alignItems:"center"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#9A8878",marginBottom:4}}>色相 H</div>
+          <svg viewBox="0 0 120 120" style={{width:110,height:110}}>
+            {HUE_RING.map((h,i)=>{
+              const isTarget=h.h===hueBase;
+              return(
+                <g key={h.h}>
+                  <path d={slicePath(i)} fill={h.hex}
+                    opacity={isTarget?1:0.35}
+                    stroke={isTarget?"#1A1208":"white"}
+                    strokeWidth={isTarget?"1.5":"0.5"}/>
+                  {/* ラベル */}
+                  {(()=>{
+                    const mid=polarToXY((i+0.5)*sliceAngle,(outerR+innerR)/2+2);
+                    return(
+                      <text x={mid.x} y={mid.y} textAnchor="middle" dominantBaseline="middle"
+                        fontSize={isTarget?"7.5":"6"} fontWeight={isTarget?"800":"600"}
+                        fill={isTarget?"white":"rgba(255,255,255,0.85)"}>
+                        {h.h}
+                      </text>
+                    );
+                  })()}
+                </g>
+              );
+            })}
+            {/* 中央に色サンプル */}
+            <circle cx={cx} cy={cy} r={innerR-2} fill={card.hex} stroke="white" strokeWidth="1.5"/>
+            {/* 正解マーカー */}
+            {markerPos&&(
+              <circle cx={markerPos.x} cy={markerPos.y} r="5" fill="white" stroke="#1A1208" strokeWidth="1.5" opacity="0.9"/>
+            )}
+          </svg>
+          <div style={{fontSize:9,fontWeight:700,color:"#C4907A",marginTop:2}}>{card.h}</div>
+        </div>
+
+        {/* 右：明度・彩度バー */}
+        <div style={{flex:1,padding:"10px 12px 10px 4px",display:"flex",flexDirection:"column",gap:10,justifyContent:"center"}}>
+
+          {/* 明度V */}
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontSize:10,fontWeight:700,color:"#9A8878"}}>明度 V</span>
+              <span style={{fontSize:11,fontWeight:800,color:"#C4907A",fontFamily:"monospace"}}>{V}</span>
+            </div>
+            <div style={{position:"relative",height:18,borderRadius:9,overflow:"hidden",border:"1.5px solid #DDD0C8"}}>
+              {/* 黒→白グラデ */}
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,#111,#fff)"}}/>
+              {/* マーカー */}
+              <div style={{position:"absolute",top:"50%",left:`${(V/10)*100}%`,transform:"translate(-50%,-50%)",width:14,height:14,borderRadius:"50%",background:card.hex,border:"2px solid white",boxShadow:"0 1px 4px rgba(0,0,0,.5)"}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:2}}>
+              <span style={{fontSize:8,color:"#9A8878"}}>0（黒）</span>
+              <span style={{fontSize:8,color:"#9A8878"}}>10（白）</span>
+            </div>
+          </div>
+
+          {/* 彩度C */}
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontSize:10,fontWeight:700,color:"#9A8878"}}>彩度 C</span>
+              <span style={{fontSize:11,fontWeight:800,color:"#C4907A",fontFamily:"monospace"}}>{C}</span>
+            </div>
+            <div style={{position:"relative",height:18,borderRadius:9,overflow:"hidden",border:"1.5px solid #DDD0C8"}}>
+              {/* 灰→色相グラデ */}
+              <div style={{position:"absolute",inset:0,background:`linear-gradient(90deg,#808080,${card.hex})`}}/>
+              {/* マーカー */}
+              <div style={{position:"absolute",top:"50%",left:`${(C/maxC)*100}%`,transform:"translate(-50%,-50%)",width:14,height:14,borderRadius:"50%",background:card.hex,border:"2px solid white",boxShadow:"0 1px 4px rgba(0,0,0,.5)"}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:2}}>
+              <span style={{fontSize:8,color:"#9A8878"}}>0（無彩色）</span>
+              <span style={{fontSize:8,color:"#9A8878"}}>14+（鮮やか）</span>
+            </div>
+          </div>
+
+          {/* 系統色名 */}
+          <div style={{background:"rgba(196,144,122,0.1)",borderRadius:8,padding:"6px 8px"}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#9A8878",marginBottom:2}}>系統色名</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#6A3A20",lineHeight:1.4}}>{card.systematic}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== MUNSELL =====
+function MunsellGame({gs,setGs,onBack}){
+  const diff=gs.difficulty||1;
+  const TOTAL=10;
+  const [deck]=useState(()=>shuffle(colors.filter(c=>c.h!=="N")));
+  const [idx,setIdx]=useState(0);
+  const [choices,setChoices]=useState([]);
+  const [chosen,setChosen]=useState(null);
+  const [score,setScore]=useState(0);
+  const [done,setDone]=useState(false);
+  const [toast,setToast]=useState(null);
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const sc=dark?"rgba(245,238,232,0.65)":"rgba(26,18,8,0.55)";
+
+  useEffect(()=>{
+    if(idx>=TOTAL)return;
+    const correct=deck[idx];
+    const others=shuffle(colors.filter(c=>c.name!==correct.name&&c.h!=="N")).slice(0,diff>=3?5:3);
+    setChoices(shuffle([correct,...others]).map(c=>c.munsell));
+    setChosen(null);
+  },[idx,diff]);
+
+  const answer=(m)=>{
+    if(chosen)return;
+    setChosen(m);
+    const isOk=m===deck[idx].munsell;
+    const ng={...gs,totalQ:(gs.totalQ||0)+1};
+    if(isOk){setScore(s=>s+1);ng.totalC=(gs.totalC||0)+1;}
+    setGs(ng);saveSt(ng);
+    // 自動遷移なし→手動ボタンで次へ
+    if(idx+1>=TOTAL){
+      const finalScore=score+(isOk?1:0);
+      if(finalScore>=10&&!gs.medals?.munsell10){
+        const mg={...ng,medals:{...(ng.medals||{}),munsell10:true}};setGs(mg);saveSt(mg);setToast("📐 マンセル博士 獲得！");
+      }
+    }
+  };
+
+  const goNext=()=>{
+    if(idx+1>=TOTAL)setDone(true);
+    else setIdx(i=>i+1);
+  };
+
+  // トライアルロック
+  if(IS_TRIAL && idx >= TRIAL_LIMIT && !done){
+    return <TrialLock onBack={onBack} gameName="マンセル穴埋め"/>;
+  }
+
+  if(done)return(
+    <div className="fu" style={{padding:"40px 20px",textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>{score>=8?"📐":"🌸"}</div>
+      <div style={{fontSize:22,fontWeight:700,color:tc,marginBottom:8}}>結果</div>
+      <div style={{fontSize:52,fontWeight:700,color:"#C4907A"}}>{score}<span style={{fontSize:18,color:sc}}> / {TOTAL}</span></div>
+      {toast&&<div style={{fontSize:14,fontWeight:700,color:"#C8A050",margin:"8px 0"}}>{toast}</div>}
+      <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
+        <button onClick={onBack} style={{padding:"12px 24px",borderRadius:14,border:"2px solid #DDD0C8",background:"white",color:"#1A1208",fontSize:14,fontWeight:700}}>ホームへ</button>
+        <button onClick={()=>{setIdx(0);setScore(0);setDone(false);setToast(null);}} style={{padding:"12px 24px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:14,fontWeight:700}}>もう一度</button>
+      </div>
+    </div>
+  );
+
+  const card=deck[idx];
+  const cdark=getLuma(card.hex)<0.42;
+  return(
+    <div style={{padding:"16px 16px 40px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
+        <span style={{fontSize:14,fontWeight:700,color:tc}}>{idx+1} / {TOTAL}</span>
+        <span style={{fontSize:14,fontWeight:700,color:"#C4907A"}}>✓ {score}点</span>
+      </div>
+      <div style={{height:5,background:"rgba(0,0,0,0.1)",borderRadius:3,marginBottom:14,overflow:"hidden"}}>
+        <div style={{height:"100%",background:"linear-gradient(90deg,#C4907A,#D4A898)",width:`${(idx/TOTAL)*100}%`,borderRadius:3}}/>
+      </div>
+      <div style={{borderRadius:20,background:card.hex,height:130,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",marginBottom:14,boxShadow:`0 12px 40px ${rgba(card.hex,.45)}`}}>
+        <div style={{fontSize:28,fontWeight:700,color:cdark?"#fff":"#1A1208"}}>{card.name}</div>
+        <div style={{fontSize:13,fontWeight:600,color:cdark?"rgba(255,255,255,.7)":"rgba(26,18,8,.55)",marginTop:4}}>{card.reading}</div>
+      </div>
+      <div style={{fontSize:14,fontWeight:700,color:tc,textAlign:"center",marginBottom:12}}>マンセル値はどれ？</div>
+      <div style={{display:"grid",gridTemplateColumns:diff>=3?"1fr 1fr 1fr":"1fr 1fr",gap:8}}>
+        {choices.map(m=>{
+          let bg2="white",border="2px solid #DDD0C8",col2="#1A1208";
+          if(chosen){if(m===card.munsell){bg2="#E8FBE8";border="2px solid #44BB44";col2="#1A6A1A";}else if(m===chosen){bg2="#FBE8E8";border="2px solid #EE4444";col2="#AA2222";}}
+          return(
+            <button key={m} onClick={()=>answer(m)} disabled={!!chosen} style={{padding:"14px 6px",borderRadius:13,border,background:bg2,color:col2,fontSize:diff>=3?11:13,fontFamily:"monospace",fontWeight:700,opacity:chosen&&m!==card.munsell&&m!==chosen?0.5:1}}>{m}</button>
+          );
+        })}
+      </div>
+
+      {/* マンセルビジュアル：回答後に表示 */}
+      {chosen&&(
+        <div className="fu">
+          <MunsellVisual card={card}/>
+          {toast&&<div style={{fontSize:13,fontWeight:700,color:"#C8A050",textAlign:"center",margin:"8px 0"}}>{toast}</div>}
+          <button onClick={goNext} style={{width:"100%",marginTop:12,padding:"14px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:15,fontWeight:700,boxShadow:"0 4px 16px rgba(196,144,122,.4)"}}>
+            {idx+1>=TOTAL?"結果を見る 📐":"次の色へ →"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== SLIDER =====
+function SliderGame({gs,setGs,onBack}){
+  const TOTAL=5;
+  const [deck]=useState(()=>shuffle(colors.filter(c=>c.h!=="N")).slice(0,TOTAL));
+  const [idx,setIdx]=useState(0);
+  const [vSlider,setVSlider]=useState(5);
+  const [cSlider,setCSlider]=useState(5);
+  const [answered,setAnswered]=useState(false);
+  const [correct,setCorrect]=useState(false);
+  const [score,setScore]=useState(0);
+  const [done,setDone]=useState(false);
+  const [toast,setToast]=useState(null);
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const sc=dark?"rgba(245,238,232,0.65)":"rgba(26,18,8,0.55)";
+
+  const card=deck[idx];
+  const tv=parseFloat(card.v)||5;
+  const tc2=parseFloat(card.c)||5;
+  // 〇✗判定：V・C両方とも±0.5以内で正解
+  const isCorrectAnswer=(v,c)=>Math.abs(v-tv)<=0.5&&Math.abs(c-tc2)<=0.5;
+
+  const check=()=>{
+    const ok=isCorrectAnswer(vSlider,cSlider);
+    setCorrect(ok);
+    setAnswered(true);
+    if(ok)setScore(s=>s+1);
+    const ng={...gs,totalQ:(gs.totalQ||0)+1};
+    if(ok)ng.totalC=(gs.totalC||0)+1;
+    setGs(ng);saveSt(ng);
+  };
+  const next=()=>{
+    if(idx+1>=TOTAL){
+      setDone(true);
+      if(score+(correct?1:0)>=4&&!gs.medals?.slider){
+        const ng={...gs,medals:{...(gs.medals||{}),slider:true}};setGs(ng);saveSt(ng);setToast("🌗 トーンの達人 獲得！");
+      }
+    }else{setIdx(i=>i+1);setVSlider(5);setCSlider(5);setAnswered(false);setCorrect(false);}
+  };
+
+  // トライアルロック
+  if(IS_TRIAL && idx >= TRIAL_LIMIT && !done){
+    return <TrialLock onBack={onBack} gameName="明度彩度スライダー"/>;
+  }
+
+  if(done)return(
+    <div className="fu" style={{padding:"40px 20px",textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>🌗</div>
+      <div style={{fontSize:22,fontWeight:700,color:tc,marginBottom:8}}>結果</div>
+      <div style={{fontSize:52,fontWeight:700,color:"#C4907A"}}>{score}<span style={{fontSize:18,color:sc}}> / {TOTAL}</span></div>
+      {toast&&<div style={{fontSize:14,fontWeight:700,color:"#C8A050",margin:"8px 0"}}>{toast}</div>}
+      <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
+        <button onClick={onBack} style={{padding:"12px 24px",borderRadius:14,border:"2px solid #DDD0C8",background:"white",color:"#1A1208",fontSize:14,fontWeight:700}}>ホームへ</button>
+        <button onClick={()=>{setIdx(0);setScore(0);setDone(false);setVSlider(5);setCSlider(5);setAnswered(false);setCorrect(false);setToast(null);}} style={{padding:"12px 24px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:14,fontWeight:700}}>もう一度</button>
+      </div>
+    </div>
+  );
+
+  const cdark=getLuma(card.hex)<0.42;
+  return(
+    <div style={{padding:"16px 16px 40px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+        <span style={{fontSize:14,fontWeight:700,color:tc}}>{idx+1} / {TOTAL}</span>
+        <span style={{fontSize:14,fontWeight:700,color:"#C4907A"}}>✓ {score}正解</span>
+      </div>
+      {/* 採点基準 */}
+      <div style={{background:"rgba(196,144,122,0.08)",borderRadius:10,padding:"7px 12px",marginBottom:10,fontSize:11,fontWeight:600,color:sc}}>
+        🎯 V・C両方とも ±0.5以内で正解
+      </div>
+      <div style={{borderRadius:20,background:card.hex,height:110,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",marginBottom:14,boxShadow:`0 12px 40px ${rgba(card.hex,.45)}`}}>
+        <div style={{fontSize:24,fontWeight:700,color:cdark?"#fff":"#1A1208"}}>{card.name}</div>
+        <div style={{fontSize:12,fontWeight:600,color:cdark?"rgba(255,255,255,.7)":"rgba(26,18,8,.55)",marginTop:3}}>{card.systematic}</div>
+      </div>
+      <div style={{fontSize:14,fontWeight:700,color:tc,textAlign:"center",marginBottom:14}}>明度(V)と彩度(C)を合わせよう</div>
+      {[["明度 V",vSlider,setVSlider,10],["彩度 C",cSlider,setCSlider,14]].map(([label,val,setVal,max])=>(
+        <div key={label} style={{marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+            <span style={{fontSize:14,fontWeight:700,color:tc}}>{label}</span>
+            <span style={{fontSize:15,fontWeight:700,color:"#C4907A",fontFamily:"monospace"}}>{val}</span>
+          </div>
+          <input type="range" min={0} max={max} step={0.5} value={val} onChange={e=>!answered&&setVal(parseFloat(e.target.value))} style={{width:"100%",accentColor:"#C4907A",height:6}}/>
+        </div>
+      ))}
+      {answered&&(
+        <div className="fu" style={{borderRadius:14,padding:"14px 16px",marginBottom:12,textAlign:"center",border:`2px solid ${correct?"#44BB44":"#EE4444"}`,background:correct?"#E8FBE8":"#FBE8E8"}}>
+          <div style={{fontSize:28,marginBottom:4}}>{correct?"✓":"✗"}</div>
+          <div style={{fontSize:14,fontWeight:700,color:correct?"#1A6A1A":"#AA2222",marginBottom:2}}>
+            {correct?"正解！":"不正解"}
+          </div>
+          <div style={{fontSize:13,fontWeight:600,color:sc}}>
+            正解：V={tv} / C={tc2}　あなた：V={vSlider} / C={cSlider}
+          </div>
+        </div>
+      )}
+      <button onClick={answered?next:check} style={{width:"100%",padding:"14px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:15,fontWeight:700}}>
+        {answered?(idx+1>=TOTAL?"結果を見る":"次の色へ →"):"答え合わせ"}
+      </button>
+    </div>
+  );
+}
+// ===== HARMONY GAME（配色技法クイズ） =====
+// PCCSの色相番号→hex変換（独自生成・テキスト非依存）
+const PCCS_HEX={
+  2:"#D84040",4:"#D86020",6:"#D89000",8:"#C8B800",10:"#88B000",
+  12:"#309850",14:"#288878",16:"#2870A8",18:"#4050A0",20:"#7040A0",
+  22:"#A03080",24:"#C03060",
+};
+const TONE_HEX={
+  v:(h)=>PCCS_HEX[h]||"#888",
+  b:(h)=>{const c=PCCS_HEX[h]||"#888";return c+"CC";},
+  lt:(h)=>{const c=PCCS_HEX[h]||"#888";return c+"88";},
+  p:(h)=>{const c=PCCS_HEX[h]||"#888";return c+"44";},
+  d:(h)=>"#888877",
+  dk:(h)=>"#444433",
+  sf:(h)=>{const c=PCCS_HEX[h]||"#888";return c+"99";},
+  g:(h)=>"#AAAAAA",
+  W:()=>"#FFFFFF",
+  Bk:()=>"#222222",
+};
+
+// PCCSカラーを生成（トーン記号+色相番号から）
+function pccsColor(tone,hue){
+  // tone: "v","b","lt","p","d","dk","sf","g","W","Bk"
+  // hue: 2,4,6,8,10,12,14,16,18,20,22,24
+  const hueNum=parseInt(hue)||2;
+  // HSLベースで生成
+  const hueAngles={2:0,4:20,6:40,8:60,10:90,12:140,14:180,16:210,18:240,20:270,22:300,24:330};
+  const h=hueAngles[hueNum]||0;
+  const toneProps={
+    v:{s:95,l:45},b:{s:80,l:60},lt:{s:60,l:72},p:{s:40,l:85},
+    sf:{s:40,l:58},d:{s:25,l:45},dk:{s:30,l:28},dkg:{s:15,l:30},
+    ltg:{s:20,l:70},g:{s:15,l:55},W:{s:0,l:97},Bk:{s:0,l:12},
+  };
+  const tp=toneProps[tone]||{s:50,l:50};
+  return `hsl(${h},${tp.s}%,${tp.l}%)`;
+}
+
+// 配色技法データ（独自定義・著作権フリー）
+const HARMONY_TYPES=[
+  {
+    id:"dyad",name:"ダイアード",en:"Dyad",
+    desc:"色相差12の補色配色（2色）",
+    hint:"向かい合う2色・色相差12",
+    gen:()=>{const h=([2,4,6,8,10,12])[Math.floor(Math.random()*6)];return[{t:"v",h},{t:"v",h:h+12}];},
+  },
+  {
+    id:"triad",name:"トライアド",en:"Triad",
+    desc:"色相環を3等分した3色配色（色相差8）",
+    hint:"正三角形・色相差8ずつ",
+    gen:()=>{const h=([2,4,6,8])[Math.floor(Math.random()*4)];return[{t:"v",h},{t:"v",h:h+8},{t:"v",h:h+16}];},
+  },
+  {
+    id:"tetrad",name:"テトラード",en:"Tetrad",
+    desc:"色相環を4等分した4色配色（色相差6）",
+    hint:"正方形・色相差6ずつ",
+    gen:()=>{const h=([2,4,6])[Math.floor(Math.random()*3)];return[{t:"v",h},{t:"v",h:h+6},{t:"v",h:h+12},{t:"v",h:h+18}];},
+  },
+  {
+    id:"split",name:"スプリットコンプリメンタリー",en:"Split complementary",
+    desc:"補色の両隣2色を使った3色配色",
+    hint:"補色の片側を2色に分裂・色相差1〜2",
+    gen:()=>{const h=([2,4,6,8,10])[Math.floor(Math.random()*5)];return[{t:"v",h},{t:"v",h:h+11},{t:"v",h:h+13}];},
+  },
+  {
+    id:"toneontone",name:"トーンオントーン",en:"Tone on tone",
+    desc:"同系色相・トーン差が大きい濃淡配色",
+    hint:"同じ色相・明度差が大きい",
+    gen:()=>{const h=([2,6,10,14,18,22])[Math.floor(Math.random()*6)];return[{t:"lt",h},{t:"dk",h}];},
+  },
+  {
+    id:"toneintone",name:"トーンイントーン",en:"Tone in tone",
+    desc:"同一または類似トーンで色相を変えた配色",
+    hint:"同じトーン・色相が違う",
+    gen:()=>{const t=(["v","b","lt","p"])[Math.floor(Math.random()*4)];const h=([2,8,14,20])[Math.floor(Math.random()*4)];return[{t,h},{t,h:h+6},{t,h:h+12}];},
+  },
+  {
+    id:"dominant_color",name:"ドミナントカラー",en:"Dominant color",
+    desc:"同一色相（色相差0〜3）でトーンを変えた配色",
+    hint:"色相を統一・トーンは自由",
+    gen:()=>{const h=([2,6,10,14,18,22])[Math.floor(Math.random()*6)];return[{t:"b",h},{t:"d",h},{t:"lt",h},{t:"dk",h}];},
+  },
+  {
+    id:"dominant_tone",name:"ドミナントトーン",en:"Dominant tone",
+    desc:"同一トーンで色相を変えた配色",
+    hint:"トーンを統一・色相は自由",
+    gen:()=>{const t=(["sf","d","lt","b"])[Math.floor(Math.random()*4)];return[{t,h:4},{t,h:10},{t,h:16},{t,h:22}];},
+  },
+  {
+    id:"camaieu",name:"カマイユ",en:"Camaïeu",
+    desc:"色相もトーンもほぼ同じ・単色に見える配色",
+    hint:"色相差0〜1・トーンも類似",
+    gen:()=>{const h=([4,8,12,16,20])[Math.floor(Math.random()*5)];return[{t:"b",h},{t:"sf",h}];},
+  },
+  {
+    id:"tonal",name:"トーナル",en:"Tonal",
+    desc:"中明度・中低彩度の中間色だけで作る配色",
+    hint:"d・sf・ltg・gトーンのみ使用",
+    gen:()=>{const hs=shuffle([2,6,10,14,18,22]).slice(0,3);return hs.map(h=>({t:(["d","sf","g","ltg"])[Math.floor(Math.random()*4)],h}));},
+  },
+];
+
+function HarmonyGame({gs,setGs,onBack}){
+  const TOTAL=10;
+  const diff=gs.difficulty||1;
+  const choicesN=diff>=3?6:4;
+
+  const makeProblem=()=>{
+    const correct=HARMONY_TYPES[Math.floor(Math.random()*HARMONY_TYPES.length)];
+    const chips=correct.gen();
+    const others=shuffle(HARMONY_TYPES.filter(h=>h.id!==correct.id)).slice(0,choicesN-1);
+    return{correct,chips,choices:shuffle([correct,...others])};
+  };
+
+  const [problems]=useState(()=>Array.from({length:TOTAL},()=>makeProblem()));
+  const [idx,setIdx]=useState(0);
+  const [chosen,setChosen]=useState(null);
+  const [score,setScore]=useState(0);
+  const [done,setDone]=useState(false);
+  const [toast,setToast]=useState(null);
+
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const sc=dark?"rgba(245,238,232,0.65)":"rgba(26,18,8,0.55)";
+  const cardBg=dark?"rgba(255,255,255,0.1)":"white";
+
+  const prob=problems[idx];
+
+  const answer=(h)=>{
+    if(chosen)return;
+    setChosen(h.id);
+    const isOk=h.id===prob.correct.id;
+    const ng={...gs,totalQ:(gs.totalQ||0)+1};
+    if(isOk){setScore(s=>s+1);ng.totalC=(gs.totalC||0)+1;}
+    if(ng.totalQ>=50&&!gs.medals?.play30){ng.medals={...(ng.medals||{}),play30:true};}
+    if(ng.totalQ>=200&&!gs.medals?.play100){ng.medals={...(ng.medals||{}),play100:true};}
+    setGs(ng);saveSt(ng);
+  };
+
+  const goNext=()=>{
+    if(idx+1>=TOTAL)setDone(true);
+    else{setIdx(i=>i+1);setChosen(null);}
+  };
+
+  // トライアルロック
+  if(IS_TRIAL && idx >= TRIAL_LIMIT && !done){
+    return <TrialLock onBack={onBack} gameName="配色技法クイズ"/>;
+  }
+
+  if(done){
+    const isPerfect=score===TOTAL;
+      const ng={...gs,medals:{...(gs.medals||{}),harmony:true}};setGs(ng);saveSt(ng);
+    }
+    return(
+      <div className="fu" style={{padding:"40px 20px",textAlign:"center"}}>
+        <div style={{fontSize:52,marginBottom:12}}>🎭</div>
+        <div style={{fontSize:22,fontWeight:700,color:tc,marginBottom:8}}>結果発表</div>
+        <div style={{fontSize:52,fontWeight:700,color:"#C4907A"}}>{score}<span style={{fontSize:18,color:sc}}> / {TOTAL}</span></div>
+        {isPerfect&&<div style={{fontSize:14,fontWeight:700,color:"#C8A050",margin:"8px 0"}}>🎭 配色マスター獲得！</div>}
+        <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
+          <button onClick={onBack} style={{padding:"12px 24px",borderRadius:14,border:"2px solid #DDD0C8",background:cardBg,color:tc,fontSize:14,fontWeight:700}}>ホームへ</button>
+          <button onClick={()=>{setIdx(0);setScore(0);setDone(false);setChosen(null);}} style={{padding:"12px 24px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:14,fontWeight:700}}>もう一度</button>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{padding:"16px 16px 40px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+        <span style={{fontSize:14,fontWeight:700,color:tc}}>{idx+1} / {TOTAL}</span>
+        <span style={{fontSize:14,fontWeight:700,color:"#C4907A"}}>✓ {score}正解</span>
+      </div>
+
+      {/* カラーチップ表示 */}
+      <div style={{background:cardBg,borderRadius:18,padding:"16px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+        <div style={{fontSize:13,fontWeight:700,color:sc,textAlign:"center",marginBottom:10}}>この配色技法はどれ？</div>
+        <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:8}}>
+          {prob.chips.map((chip,i)=>(
+            <div key={i} style={{
+              flex:1,height:64,borderRadius:12,
+              background:pccsColor(chip.t,chip.h),
+              boxShadow:"0 3px 12px rgba(0,0,0,.15)",
+              maxWidth:70,
+            }}/>
+          ))}
+        </div>
+        <div style={{fontSize:11,fontWeight:600,color:sc,textAlign:"center"}}>
+          {prob.chips.map(c=>`${c.t}${c.h}`).join("　")}
+        </div>
+      </div>
+
+      {/* 選択肢 */}
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {prob.choices.map(h=>{
+          let bg2=cardBg,border="2px solid #DDD0C8",col2=tc;
+          if(chosen){
+            if(h.id===prob.correct.id){bg2="#E8FBE8";border="2px solid #44BB44";col2="#1A6A1A";}
+            else if(h.id===chosen){bg2="#FBE8E8";border="2px solid #EE4444";col2="#AA2222";}
+          }
+          return(
+            <button key={h.id} onClick={()=>answer(h)} disabled={!!chosen}
+              style={{padding:"12px 14px",borderRadius:14,border,background:bg2,color:col2,textAlign:"left",opacity:chosen&&h.id!==prob.correct.id&&h.id!==chosen?0.5:1}}>
+              <div style={{fontSize:14,fontWeight:700,marginBottom:2}}>{h.name}</div>
+              <div style={{fontSize:11,fontWeight:600,color:chosen&&h.id===prob.correct.id?"#2A8A2A":chosen&&h.id===chosen?"#AA2222":"#9A8878"}}>{h.en}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 解説 */}
+      {chosen&&(
+        <div className="fu" style={{marginTop:12,background:cardBg,borderRadius:14,padding:"12px 14px",border:"1.5px solid #DDD0C8"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#C4907A",marginBottom:3}}>📚 {prob.correct.name}</div>
+          <div style={{fontSize:12,fontWeight:600,color:sc,marginBottom:3}}>{prob.correct.desc}</div>
+          <div style={{fontSize:11,fontWeight:700,color:"#8A7898",background:"rgba(140,120,160,0.1)",borderRadius:8,padding:"4px 8px",display:"inline-block"}}>{prob.correct.hint}</div>
+          <button onClick={goNext} style={{width:"100%",marginTop:10,padding:"13px",borderRadius:12,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:14,fontWeight:700}}>
+            {idx+1>=TOTAL?"結果を見る 🎭":"次の問題へ →"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== SETTINGS =====
+function Settings({gs,setGs,onBack}){
+  const [nick,setNick]=useState(gs.nickname||"");
+  const [diff,setDiff]=useState(gs.difficulty||1);
+  const [bgHex,setBgHex]=useState(gs.bgHex||"#FAE8EC");
+  const [charIcon,setCharIcon]=useState(gs.charIcon||"pink");
+  const [saved,setSaved]=useState(false);
+
+  const save=()=>{
+    const ng={...gs,nickname:nick,difficulty:diff,bgHex,charIcon};
+    setGs(ng);saveSt(ng);setSaved(true);setTimeout(()=>setSaved(false),1500);
+  };
+  const reset=()=>{
+    if(!window.confirm("全データをリセットしますか？"))return;
+    const ng={...defSt,nickname:nick,difficulty:diff,bgHex,charIcon};
+    setGs(ng);saveSt(ng);alert("リセットしました！");
+  };
+
+  return(
+    <div style={{padding:"20px 16px 80px"}}>
+      {/* ニックネーム */}
+      <div style={{position:"relative",background:"white",borderRadius:20,padding:"18px 20px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.07)",overflow:"hidden"}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#1A1208",marginBottom:12}}>🐰 呼ばれたい名前</div>
+        <input value={nick} onChange={e=>setNick(e.target.value)} placeholder="名前を入力..." style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"2px solid #DDD0C8",fontSize:15,fontWeight:600,color:"#1A1208",outline:"none",filter:IS_TRIAL?"blur(2px)":"none"}}/>
+        <div style={{fontSize:12,fontWeight:600,color:"#9A8878",marginTop:8,filter:IS_TRIAL?"blur(2px)":"none"}}>アプリを開くたびにうさぎが呼びかけてくれます🌸</div>
+        {IS_TRIAL&&(
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.6)",borderRadius:20}}>
+            <div style={{fontSize:20}}>🔒</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#8A6040",marginTop:4}}>完全版で設定可能</div>
+          </div>
+        )}
+      </div>
+
+      {/* キャラクター選択 */}
+      <div style={{position:"relative",background:"white",borderRadius:20,padding:"18px 20px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.07)",overflow:"hidden"}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#1A1208",marginBottom:12}}>🐇 うさぎキャラを選ぶ</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,filter:IS_TRIAL?"blur(3px)":"none"}}>
+          {Object.entries(CHAR_ICONS).map(([key,ch])=>(
+            <button key={key} onClick={()=>!IS_TRIAL&&setCharIcon(key)} style={{borderRadius:16,border:`2.5px solid ${charIcon===key?"#C4907A":"#DDD0C8"}`,background:charIcon===key?"#FFF4EE":"#FAFAFA",padding:"14px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+              <div style={{width:60,height:60}} dangerouslySetInnerHTML={{__html:ch.svg}}/>
+              <div style={{fontSize:13,fontWeight:700,color:charIcon===key?"#C4907A":"#1A1208"}}>{ch.label}</div>
+              {charIcon===key&&<div style={{fontSize:11,color:"#C4907A",fontWeight:700}}>✓ 選択中</div>}
+            </button>
+          ))}
+        </div>
+        {IS_TRIAL&&(
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.6)",borderRadius:20}}>
+            <div style={{fontSize:20}}>🔒</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#8A6040",marginTop:4}}>完全版で設定可能</div>
+          </div>
+        )}
+      </div>
+
+      {/* 難易度 */}
+      <div style={{position:"relative",background:"white",borderRadius:20,padding:"18px 20px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.07)",overflow:"hidden"}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#1A1208",marginBottom:12}}>🎯 難易度</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {DIFFICULTY.map(d=>(
+            <button key={d.level} onClick={()=>!IS_TRIAL&&setDiff(d.level)} style={{padding:"12px 16px",borderRadius:14,border:`2px solid ${diff===d.level?d.color:"#DDD0C8"}`,background:diff===d.level?`${d.color}18`:"white",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center",filter:IS_TRIAL&&d.level>1?"blur(2px)":"none"}}>
+              <div>
+                <div style={{fontSize:15,fontWeight:700,color:diff===d.level?d.color:"#1A1208"}}>{d.name}</div>
+                <div style={{fontSize:12,fontWeight:600,color:"#9A8878"}}>{d.desc}</div>
+              </div>
+              {diff===d.level&&<span style={{fontSize:18,color:d.color}}>✓</span>}
+            </button>
+          ))}
+        </div>
+        {IS_TRIAL&&(
+          <div style={{position:"absolute",bottom:0,left:0,right:0,height:"64%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.65)",borderRadius:"0 0 20px 20px",pointerEvents:"none"}}>
+            <div style={{fontSize:16}}>🔒</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#8A6040",marginTop:4}}>ふつう・むずかしいは完全版で</div>
+          </div>
+        )}
+      </div>
+
+      {/* 背景テーマ（検定色） */}
+      <div style={{position:"relative",background:"white",borderRadius:20,padding:"18px 20px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.07)",overflow:"hidden"}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#1A1208",marginBottom:12}}>🎨 背景テーマ（慣用色名から）</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,filter:IS_TRIAL?"blur(3px)":"none"}}>
+          {BG_THEMES.map(t=>(
+            <button key={t.hex} onClick={()=>!IS_TRIAL&&setBgHex(t.hex)} style={{borderRadius:14,border:`2.5px solid ${bgHex===t.hex?"#C4907A":"#DDD0C8"}`,background:t.hex,padding:"14px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+              <div style={{fontSize:12,fontWeight:700,color:getLuma(t.hex)<0.35?"#F5EEE8":"#1A1208",textAlign:"center"}}>{t.name}</div>
+              <div style={{fontSize:10,fontWeight:600,color:getLuma(t.hex)<0.35?"rgba(245,238,232,.7)":"#8A7060",textAlign:"center"}}>{t.reading}</div>
+              {bgHex===t.hex&&<div style={{fontSize:11,fontWeight:700,color:getLuma(t.hex)<0.35?"#F5EEE8":"#C4907A"}}>✓</div>}
+            </button>
+          ))}
+        </div>
+        {IS_TRIAL&&(
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.6)",borderRadius:20}}>
+            <div style={{fontSize:20}}>🔒</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#8A6040",marginTop:4}}>完全版で設定可能</div>
+          </div>
+        )}
+      </div>
+
+      <button onClick={save} style={{width:"100%",padding:"14px",borderRadius:14,background:"linear-gradient(135deg,#C4907A,#D4A898)",color:"white",fontSize:15,fontWeight:700,marginBottom:10}}>
+        {saved?"✓ 保存しました！":"設定を保存する"}
+      </button>
+      <button onClick={reset} style={{width:"100%",padding:"12px",borderRadius:14,border:"2px solid #EE4444",background:"white",color:"#CC2222",fontSize:14,fontWeight:700,marginBottom:20}}>
+        🔄 データをリセット
+      </button>
+
+      {/* 著作権表示 */}
+      <div style={{borderTop:"1px solid #DDD0C8",paddingTop:16,textAlign:"center"}}>
+        <div style={{fontSize:11,fontWeight:600,color:"#B0A090",lineHeight:1.8}}>
+          © 2025 YUKA's Color Studio<br/>
+          カラーマスター2級【お試し版】<br/>
+          本アプリの無断複製・転載・再配布を禁じます
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== HOME =====
+// スタンプの絵文字バリエーション（20種類）
+const STAMP_ICONS=["🌸","🎨","🌈","⭐","🐰","💎","🌿","🦋","🌙","🎯","🏅","🌷","✨","🍀","🎀","🦊","🌺","💡","🎵","🌟"];
+
+function Home({gs,onStart}){
+  const [greeting]=useState(()=>{
+    const name=gs.nickname||"あなた";
+    return GREETINGS[Math.floor(Math.random()*GREETINGS.length)](name);
+  });
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const sc=dark?"rgba(245,238,232,0.65)":"rgba(26,18,8,0.55)";
+  const cardBg=dark?"rgba(255,255,255,0.1)":"white";
+  const cardBorder=dark?"rgba(255,255,255,0.15)":"#DDD0C8";
+  // スタンプは10問に1枚・最大20枚
+  const stamps=Math.min(20,Math.floor((gs.totalQ||0)/10));
+  const earnedMedals=MEDALS.filter(m=>gs.medals?.[m.id]);
+  const diff=DIFFICULTY.find(d=>d.level===(gs.difficulty||1));
+  const charKey=gs.charIcon||"pink";
+  const charSvg=CHAR_ICONS[charKey]?.svg||CHAR_ICONS.pink.svg;
+  const allMedalsEarned=earnedMedals.length===MEDALS.length;
+
+  return(
+    <div style={{padding:"16px 16px 100px"}}>
+
+      {/* お試し版バッジ */}
+      {IS_TRIAL&&(
+        <div style={{display:"flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,#F0C080,#E8A050)",borderRadius:12,padding:"6px 14px",marginBottom:12,boxShadow:"0 2px 8px rgba(200,140,60,.3)"}}>
+          <span style={{fontSize:13,fontWeight:700,color:"white"}}>🐣 お試し版</span>
+          <span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)"}}>各ゲーム3問まで体験できます</span>
+        </div>
+      )}
+
+      {/* 全メダルコンプリート演出 */}
+      {allMedalsEarned&&(
+        <div className="fu" style={{background:"linear-gradient(135deg,#C8A050,#E8D080,#C8A050)",borderRadius:20,padding:"16px 20px",marginBottom:14,textAlign:"center",boxShadow:"0 8px 32px rgba(200,160,80,.4)"}}>
+          <div style={{fontSize:36,marginBottom:4}}>🏆✨🏆</div>
+          <div style={{fontSize:18,fontWeight:700,color:"#6B4010",marginBottom:4}}>おめでとう！</div>
+          <div style={{fontSize:14,fontWeight:600,color:"#8B6020",lineHeight:1.6}}>全{MEDALS.length}個のメダルを制覇！<br/>カラーマスター2級、完全攻略だ！🎉</div>
+        </div>
+      )}
+
+      {/* うさぎ */}
+      <div style={{background:cardBg,border:`1.5px solid ${cardBorder}`,borderRadius:20,padding:"16px 18px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:48,height:48,flexShrink:0}} dangerouslySetInnerHTML={{__html:charSvg}}/>
+          <div style={{fontSize:14,fontWeight:700,color:tc,lineHeight:1.7}}>{greeting}</div>
+        </div>
+      </div>
+
+      {/* ゲーム選択 */}
+      <div style={{fontSize:14,fontWeight:700,color:sc,marginBottom:10}}>ゲームを選んで学ぼう</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+        {[
+          {id:"flash",icon:"📖",name:"フラッシュカード",desc:"色を見て名前を当てる",bg:"#FFF0EC"},
+          {id:"tone",icon:"🎨",name:"トーン分類ゲーム",desc:"PCCSトーンを当てる",bg:"#EEF0FA"},
+          {id:"hue",icon:"🌈",name:"色相ならべ",desc:"色相環順に並べる",bg:"#EEFAEE"},
+          {id:"munsell",icon:"📐",name:"マンセル穴埋め",desc:"マンセル値を当てる",bg:"#FAF5EC"},
+          {id:"slider",icon:"🎯",name:"明度彩度スライダー",desc:"V・Cの値を合わせる",bg:"#F4EEFA"},
+          {id:"harmony",icon:"🎭",name:"配色技法クイズ",desc:"配色技法名を当てる",bg:"#FFF0F8"},
+        ].map(g=>(
+          <button key={g.id} onClick={()=>onStart(g.id)} style={{background:g.bg,borderRadius:18,padding:"16px 14px",border:"2px solid #DDD0C8",textAlign:"left",boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+            <div style={{fontSize:28,marginBottom:6}}>{g.icon}</div>
+            <div style={{fontSize:15,fontWeight:700,color:"#1A1208",marginBottom:3}}>{g.name}</div>
+            <div style={{fontSize:12,fontWeight:600,color:"#8A7060",lineHeight:1.4}}>{g.desc}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* 学習記録（シンプル版） */}
+      <div style={{background:cardBg,border:`1.5px solid ${cardBorder}`,borderRadius:20,padding:"14px 20px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:14,fontWeight:700,color:tc}}>📊 学習記録</span>
+          <span style={{fontSize:12,fontWeight:700,color:diff?.color||"#C4907A"}}>{diff?.name}モード</span>
+        </div>
+        <div style={{display:"flex",gap:20,marginTop:8}}>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:22,fontWeight:700,color:"#C4907A"}}>{gs.totalQ||0}</div>
+            <div style={{fontSize:11,fontWeight:600,color:sc}}>挑戦数</div>
+          </div>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:22,fontWeight:700,color:"#44AA66"}}>{gs.totalC||0}</div>
+            <div style={{fontSize:11,fontWeight:600,color:sc}}>正解数</div>
+          </div>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:22,fontWeight:700,color:"#C8A050"}}>{gs.bestCombo||0}</div>
+            <div style={{fontSize:11,fontWeight:600,color:sc}}>最高コンボ</div>
+          </div>
+        </div>
+      </div>
+
+      {/* スタンプカード */}
+      <div style={{position:"relative",background:cardBg,border:`1.5px solid ${cardBorder}`,borderRadius:20,padding:"16px 20px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,.06)",overflow:"hidden"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <span style={{fontSize:15,fontWeight:700,color:tc}}>スタンプカード</span>
+          <span style={{fontSize:12,fontWeight:600,color:sc}}>{stamps}/20枚　10問ごと</span>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5,filter:IS_TRIAL?"blur(3px)":"none"}}>
+          {Array.from({length:20},(_,i)=>(
+            <div key={i} className={i<stamps?"pop":""} style={{aspectRatio:"1",borderRadius:10,background:i<stamps?"linear-gradient(135deg,#C4907A,#E8C870)":"rgba(0,0,0,0.07)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:i<stamps?16:10,boxShadow:i<stamps?"0 2px 8px rgba(196,144,122,.35)":"none",color:i<stamps?"white":"#C0B8B0",fontWeight:700}}>
+              {i<stamps?STAMP_ICONS[i]:""}
+            </div>
+          ))}
+        </div>
+        {IS_TRIAL&&(
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.55)",borderRadius:20}}>
+            <div style={{fontSize:22}}>🔒</div>
+            <div style={{fontSize:12,fontWeight:700,color:"#8A6040",marginTop:4}}>完全版で解放</div>
+          </div>
+        )}
+      </div>
+
+      {/* メダル */}
+      <div style={{position:"relative",background:cardBg,border:`1.5px solid ${cardBorder}`,borderRadius:20,padding:"16px 20px",marginBottom:20,boxShadow:"0 4px 20px rgba(0,0,0,.06)",overflow:"hidden"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <span style={{fontSize:15,fontWeight:700,color:tc}}>メダル 🏅</span>
+          <span style={{fontSize:13,fontWeight:700,color:"#C4A882"}}>{earnedMedals.length}/{MEDALS.length}個</span>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,filter:IS_TRIAL?"blur(3px)":"none"}}>
+          {MEDALS.map(m=>{
+            const earned=gs.medals?.[m.id];
+            return(
+              <div key={m.id} title={m.desc} style={{aspectRatio:"1",borderRadius:12,background:earned?"linear-gradient(135deg,#C8A050,#E8D080)":"rgba(0,0,0,0.06)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontSize:earned?20:14,opacity:earned?1:0.3,boxShadow:earned?"0 3px 10px rgba(200,160,80,.35)":"none",padding:3}}>
+                <div>{m.icon}</div>
+                <div style={{fontSize:7,fontWeight:700,color:earned?"#8B6020":"#A0988A",marginTop:1,textAlign:"center",lineHeight:1.2}}>{m.name}</div>
+              </div>
+            );
+          })}
+        </div>
+        {IS_TRIAL&&(
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.55)",borderRadius:20}}>
+            <div style={{fontSize:22}}>🔒</div>
+            <div style={{fontSize:12,fontWeight:700,color:"#8A6040",marginTop:4}}>完全版で解放</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ===== APP =====
+function App(){
+  const [gs,setGs]=useState(()=>{const s=loadSt();return s?{...defSt,...s}:defSt;});
+  const [screen,setScreen]=useState("home");
+  const bg=gs.bgHex||"#FAE8EC";
+  const dark=isDark(bg);
+  const tc=dark?"#F5EEE8":"#1A1208";
+  const headerBg=dark?"rgba(20,20,35,0.96)":"rgba(255,255,255,0.96)";
+  const TITLES={flash:"📖 フラッシュカード",tone:"🎨 トーン分類ゲーム",hue:"🌈 色相ならべ",munsell:"📐 マンセル穴埋め",slider:"🎯 スライダー",harmony:"🎭 配色技法クイズ",settings:"⚙️ 設定"};
+
+  return(
+    <div style={{minHeight:"100vh",background:bg,maxWidth:480,margin:"0 auto",transition:"background .4s"}}>
+      <div style={{position:"sticky",top:0,zIndex:50,background:headerBg,backdropFilter:"blur(10px)",borderBottom:`1px solid ${dark?"rgba(255,255,255,0.1)":"#DDD0C8"}`,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
+        {screen!=="home"&&(
+          <button onClick={()=>setScreen("home")} style={{width:36,height:36,borderRadius:"50%",border:`2px solid ${dark?"rgba(255,255,255,.2)":"#DDD0C8"}`,background:dark?"rgba(255,255,255,.1)":"white",color:tc,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontWeight:700}}>←</button>
+        )}
+        <div style={{flex:1,fontSize:screen==="home"?17:15,fontWeight:700,color:tc}}>
+          {screen==="home"?<>カラーマスター 2級{IS_TRIAL&&<span style={{fontSize:10,fontWeight:700,background:"#E8A050",color:"white",borderRadius:8,padding:"2px 6px",marginLeft:6,verticalAlign:"middle"}}>お試し</span>}</>:TITLES[screen]}
+        </div>
+        {screen==="home"&&(
+          <button onClick={()=>setScreen("settings")} style={{width:36,height:36,borderRadius:"50%",border:`2px solid ${dark?"rgba(255,255,255,.2)":"#DDD0C8"}`,background:dark?"rgba(255,255,255,.1)":"white",color:tc,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>⚙️</button>
+        )}
+      </div>
+      {screen==="home"&&<Home gs={gs} onStart={setScreen}/>}
+      {screen==="flash"&&<FlashCard gs={gs} setGs={setGs} onBack={()=>setScreen("home")}/>}
+      {screen==="tone"&&<ToneGame gs={gs} setGs={setGs} onBack={()=>setScreen("home")}/>}
+      {screen==="hue"&&<HueGame gs={gs} setGs={setGs} onBack={()=>setScreen("home")}/>}
+      {screen==="munsell"&&<MunsellGame gs={gs} setGs={setGs} onBack={()=>setScreen("home")}/>}
+      {screen==="slider"&&<SliderGame gs={gs} setGs={setGs} onBack={()=>setScreen("home")}/>}
+      {screen==="harmony"&&<HarmonyGame gs={gs} setGs={setGs} onBack={()=>setScreen("home")}/>}
+      {screen==="settings"&&<Settings gs={gs} setGs={setGs} onBack={()=>setScreen("home")}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
